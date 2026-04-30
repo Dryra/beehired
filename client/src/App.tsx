@@ -13,6 +13,8 @@ type Analysis = {
   interviewRisk: "Low" | "Medium" | "High";
 };
 
+const API_URL = import.meta.env.VITE_API_URL;
+
 function App() {
   const [cv, setCv] = useState("");
   const [jobDescription, setJobDescription] = useState("");
@@ -35,7 +37,7 @@ function App() {
     try {
       setIsParsingPdf(true);
 
-      const response = await fetch("http://localhost:3001/api/parse-cv", {
+      const response = await fetch(`${API_URL}/api/parse-cv`, {
         method: "POST",
         body: formData,
       });
@@ -60,7 +62,7 @@ function App() {
     setLoading(true);
     setAnalysis(null);
 
-    const res = await fetch("http://localhost:3001/api/analyze", {
+    const res = await fetch(`${API_URL}/api/analyze`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ cv, jobDescription }),

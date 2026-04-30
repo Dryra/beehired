@@ -11,11 +11,43 @@ app.use(cors());
 app.use(express.json({ limit: "2mb" }));
 app.use("/api", cvRoutes);
 
+const PORT = process.env.PORT || 3001;
+
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
+const DEMO_MODE = process.env.DEMO_MODE === "true";
+
 app.post("/api/analyze", async (req, res) => {
+  // For demo purposes
+  if (DEMO_MODE) {
+    return res.json({
+      matchScore: 78,
+      verdict: "Apply if interested",
+      summary:
+        "This role is a good potential match, with strong overlap in frontend, real-time systems, and AI product integration.",
+      strongMatches: [
+        "React/TypeScript",
+        "AI API integration",
+        "Product-focused frontend development",
+      ],
+      missingSkills: [
+        "Specific domain experience",
+        "Advanced cloud infrastructure",
+      ],
+      redFlags: ["Role may involve more backend ownership than expected"],
+      whatToEmphasize: [
+        "AI product integration",
+        "Frontend architecture",
+        "Real-world product thinking",
+      ],
+      applicationMessage:
+        "Hi, I’m a Senior Software Engineer with experience building frontend, XR, and AI-powered applications. BeeHired reflects my interest in practical AI product development...",
+      interviewRisk: "Medium",
+    });
+  }
+
   try {
     const { cv, jobDescription } = req.body;
 
@@ -71,6 +103,6 @@ ${jobDescription}
   }
 });
 
-app.listen(3001, () => {
-  console.log("Server running on http://localhost:3001");
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
 });

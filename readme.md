@@ -16,8 +16,6 @@ It helps users understand whether a role is worth applying for by showing a matc
 - Tailored application message
 - PDF CV upload
 - Copy-to-clipboard application message
-- Animated score reveal
-- Responsive dark SaaS UI with bee-inspired branding
 
 ## 🧠 Why I built it
 

@@ -1,0 +1,466 @@
+@use "./styles/variables" as *;
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: Inter, system-ui, sans-serif;
+  color: $text;
+}
+
+.app {
+  width: min(1200px, 92%);
+  margin: 0 auto;
+  padding: 56px 0;
+
+  .honeycombBg {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    opacity: 0.01;
+    background: center
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='rgb(40,40,40)' viewBox='0 0 100 169.5'%3E%3Cpolygon points='50,34.75 93.5,59.75 93.5,109.75 50,134.75 6.5,109.75 6.5,59.75'%3E%3C/polygon%3E%3Cpolygon points='0,-50 43.5,-25 43.5,25 0,50 -43.5,25 -43.5,-25'%3E%3C/polygon%3E%3Cpolygon points='100,-50 143.5,-25 143.5,25 100,50 56.5,25 56.5,-25'%3E%3C/polygon%3E%3Cpolygon points='0,119.5 43.5,144.5 43.5,194.5 0,219.5 -43.5,194.5 -43.5,144.5'%3E%3C/polygon%3E%3Cpolygon points='100,119.5 143.5,144.5 143.5,194.5 100,219.5 56.5,194.5 56.5,144.5'%3E%3C/polygon%3E%3C/svg%3E");
+    background-size: 32px;
+  }
+
+  .hero {
+    text-align: center;
+    margin-bottom: 40px;
+
+    .badge {
+      display: inline-block;
+      background: rgba(244, 197, 66, 0.14);
+      border: 1px solid rgba(244, 197, 66, 0.35);
+      color: $primary;
+      padding: 8px 14px;
+      border-radius: 999px;
+      font-size: 14px;
+      margin-bottom: 16px;
+    }
+
+    .header {
+      font-size: clamp(48px, 8vw, 92px);
+      color: $primary;
+
+      .bee-header {
+        display: inline-block;
+        animation: beeFloat 2.4s ease-in-out infinite;
+      }
+    }
+
+    .tagline {
+      font-size: 24px;
+      font-weight: 700;
+      margin: 18px 0 18px;
+    }
+
+    .subtitle {
+      max-width: 680px;
+      margin: 0 auto;
+      color: $muted;
+      font-size: 14px;
+      line-height: 1.6;
+      opacity: 0.9;
+    }
+  }
+
+  .inputGrid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+
+    .panel {
+      border: 1px solid $border;
+      padding: 22px;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      border: 1px solid rgba(255, 255, 255, 0.42);
+      border-radius: 24px;
+      box-shadow:
+        0 22px 60px rgba(15, 23, 42, 0.14),
+        inset 0 1px 0 rgba(255, 255, 255, 0.72);
+      backdrop-filter: blur(22px) saturate(145%);
+      -webkit-backdrop-filter: blur(22px) saturate(145%);
+
+      textarea {
+        width: 100%;
+        min-height: 320px;
+        background: #c0c0c033;
+        color: $text;
+        padding: 16px;
+        border: 1px solid rgba(231, 231, 231, 0.25);
+        margin-top: auto;
+        border-radius: 24px;
+        &:focus {
+          border-color: $primary;
+          outline: none;
+        }
+      }
+    }
+  }
+
+  .actionRow {
+    display: flex;
+    justify-content: center;
+    margin: 28px 0;
+
+    .analyzeButton {
+      min-width: 170px;
+      min-height: 50px;
+      border-radius: 999px;
+      background: $primary;
+      color: $bg;
+      padding: 14px 28px;
+      font-weight: 800;
+      cursor: pointer;
+      border: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      transition:
+        min-width 0.25s ease,
+        transform 0.2s ease,
+        box-shadow 0.2s ease,
+        opacity 0.2s ease;
+
+      &:hover:not(:disabled) {
+        transform: translateY(-2px);
+        box-shadow: 0 16px 36px rgba(250, 204, 21, 0.25);
+      }
+
+      &.isLoading {
+        min-width: 230px;
+      }
+
+      &:disabled {
+        opacity: 0.65;
+        cursor: not-allowed;
+      }
+
+      .spinner {
+        width: 18px;
+        height: 18px;
+        border: 3px solid rgba(15, 23, 42, 0.25);
+        border-top-color: $bg;
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+      }
+    }
+  }
+
+  .results {
+    margin-top: 32px;
+    animation: resultIn 0.45s ease both;
+
+    .scoreCard {
+      display: flex;
+      gap: 24px;
+      padding: 24px;
+      border: 1px solid $border;
+      border-radius: 24px;
+      margin-bottom: 24px;
+      background: $card;
+
+      &.scoreHigh {
+        border-color: rgba(34, 197, 94, 0.45);
+
+        .score,
+        .statusPill {
+          background: #22c55e;
+          color: #052e16;
+        }
+      }
+
+      &.scoreMedium {
+        border-color: rgba(250, 204, 21, 0.55);
+
+        .score,
+        .statusPill {
+          background: $primary;
+          color: $bg;
+        }
+      }
+
+      &.scoreLow {
+        border-color: rgba(239, 68, 68, 0.45);
+
+        .score,
+        .statusPill {
+          background: #ef4444;
+          color: #fff;
+        }
+      }
+
+      .score {
+        width: 110px;
+        height: 110px;
+        border-radius: 28px;
+        display: grid;
+        place-items: center;
+        font-size: 34px;
+        font-weight: 900;
+        flex: 0 0 auto;
+      }
+
+      .statusPill {
+        display: inline-flex;
+        border-radius: 999px;
+        padding: 6px 10px;
+        font-size: 12px;
+        font-weight: 800;
+        margin-bottom: 10px;
+      }
+    }
+
+    .summary {
+      color: $muted;
+      line-height: 1.7;
+    }
+
+    .resultGrid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 20px;
+      margin: 24px 0;
+
+      .resultCard {
+        background: $card;
+        border: 1px solid $border;
+        border-radius: 24px;
+        padding: 22px;
+        animation: resultIn 0.45s ease both;
+
+        &:nth-child(2) {
+          animation-delay: 0.06s;
+        }
+
+        &:nth-child(3) {
+          animation-delay: 0.12s;
+        }
+
+        &:nth-child(4) {
+          animation-delay: 0.18s;
+        }
+
+        li {
+          margin-bottom: 10px;
+          color: $muted;
+        }
+      }
+    }
+
+    .messageBox {
+      background: $card;
+      border: 1px solid $border;
+      border-radius: 24px;
+      padding: 22px;
+
+      .messageHeader {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 16px;
+        margin-bottom: 12px;
+
+        h3 {
+          margin: 0;
+        }
+
+        .copyButton {
+          border-radius: 999px;
+          background: rgba(250, 204, 21, 0.12);
+          border: 1px solid rgba(250, 204, 21, 0.35);
+          color: $primary;
+          padding: 8px 14px;
+          font-weight: 800;
+          cursor: pointer;
+
+          &:hover {
+            background: rgba(250, 204, 21, 0.18);
+          }
+        }
+      }
+
+      p {
+        line-height: 1.7;
+        color: $muted;
+      }
+    }
+  }
+}
+
+@media (max-width: 800px) {
+  .app {
+    width: min(100% - 32px, 1200px);
+    padding: 32px 0;
+
+    .hero {
+      margin-bottom: 28px;
+
+      .header {
+        font-size: clamp(42px, 15vw, 64px);
+      }
+
+      .tagline {
+        font-size: 20px;
+      }
+
+      .subtitle {
+        font-size: 14px;
+      }
+    }
+
+    .inputGrid {
+      grid-template-columns: 1fr;
+      gap: 18px;
+
+      .panel {
+        padding: 18px;
+
+        textarea {
+          min-height: 240px;
+          font-size: 15px;
+        }
+      }
+    }
+
+    .actionRow {
+      button {
+        width: 100%;
+        padding: 16px 24px;
+      }
+    }
+
+    .results {
+      .scoreCard {
+        flex-direction: column;
+        align-items: flex-start;
+
+        .score {
+          width: 90px;
+          height: 90px;
+          font-size: 28px;
+        }
+      }
+
+      .resultGrid {
+        grid-template-columns: 1fr;
+        gap: 16px;
+      }
+    }
+  }
+}
+
+.uploadBox {
+  display: block;
+  margin-bottom: 14px;
+  padding: 14px 16px;
+  border: 1px dashed $border;
+  border-radius: 16px;
+  color: $muted;
+  cursor: pointer;
+  text-align: center;
+  transition: 0.2s ease;
+
+  &:hover {
+    border-color: $primary;
+    color: $primary;
+  }
+
+  input {
+    display: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .app {
+    width: min(100% - 20px, 1200px);
+    padding: 24px 0;
+
+    .hero {
+      .badge {
+        font-size: 12px;
+      }
+
+      .header {
+        font-size: 40px;
+      }
+
+      .subtitle {
+        font-size: 12px;
+      }
+
+      .tagline {
+        font-size: 18px;
+      }
+    }
+
+    .inputGrid .panel,
+    .results .scoreCard,
+    .results .resultGrid .resultCard,
+    .results .messageBox {
+      border-radius: 18px;
+      padding: 16px;
+    }
+  }
+}
+
+@keyframes honeyMove {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+
+  to {
+    transform: translate3d(-80px, -140px, 0);
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes resultIn {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes beeFloat {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+.liftCard {
+  transition:
+    transform 0.22s ease,
+    border-color 0.22s ease,
+    box-shadow 0.22s ease;
+
+  &:hover {
+    cursor:
+      url("./assets/hero.png") 16 16,
+      pointer;
+
+    transform: translateY(-4px);
+    border-color: rgba(250, 204, 21, 0.65);
+    box-shadow: 0 18px 50px rgba(250, 204, 21, 0.12);
+  }
+}

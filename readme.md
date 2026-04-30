@@ -67,23 +67,38 @@ cd beehired
 
 ### 2. Install frontend dependencies
 
+```bash
 cd client
 npm install
 npm run dev
+```
 
 ### 3. Install backend dependencies
 
+```bash
 cd server
 npm install
+```
 
 ### 4. Create .env
 
+```bash
 OPENAI_API_KEY=your_openai_api_key_here
+```
 
 ### 5. Run frontend
 
+```bash
 npm run dev
+```
 
 ### 6. Run Backend
 
+```bash
 npx tsx src/index.ts
+```
+
+### 👨‍💻 Author
+
+_Ahmed Drira_
+Senior Software Engineer focused on frontend, XR, real-time systems, and AI-powered interactive applications.

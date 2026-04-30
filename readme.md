@@ -19,9 +19,9 @@ It helps users understand whether a role is worth applying for by showing a matc
 
 ## 🧠 Why I built it
 
-I built BeeHired while job hunting to solve a real problem: quickly understanding whether a role is actually worth applying for.
+I built BeeHired while job hunting to solve a problem I had: quickly understanding whether a role is actually worth applying for.
 
-The goal was to build something practical, polished, and product-like — not just another AI demo.
+The goal was to build something practical and polished.
 
 ## 🛠 Tech Stack
 

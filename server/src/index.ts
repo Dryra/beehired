@@ -17,7 +17,7 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
-const DEMO_MODE = process.env.DEMO_MODE == "true";
+const DEMO_MODE = process.env.DEMO_MODE == "false";
 
 app.post("/api/analyze", async (req, res) => {
   console.log("demo mode", DEMO_MODE);

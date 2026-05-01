@@ -15,6 +15,26 @@ body {
   margin: 0 auto;
   padding: 56px 0;
 
+  .links {
+    display: flex;
+    .jobsListButton {
+      margin-left: auto;
+      cursor: pointer;
+      .jobsList {
+        width: 46px;
+        filter: brightness(0) saturate(100%) invert(67%) sepia(90%)
+          saturate(662%) hue-rotate(359deg) brightness(103%) contrast(105%);
+      }
+      .jobsList:hover {
+        svg {
+          fill: $primary;
+        }
+        transform: translateY(-1px);
+        box-shadow: 0 16px 36px rgba(250, 204, 21, 0.25);
+      }
+    }
+  }
+
   .honeycombBg {
     position: fixed;
     inset: 0;
@@ -380,7 +400,7 @@ body {
 @media (max-width: 480px) {
   .app {
     width: min(100% - 20px, 1200px);
-    padding: 24px 0;
+    padding: 24px 24px;
 
     .hero {
       .badge {

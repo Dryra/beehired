@@ -1,5 +1,6 @@
 {
   "name": "client",
+  "description": "Frontend for BeeHired",
   "private": true,
   "version": "0.0.0",
   "type": "module",

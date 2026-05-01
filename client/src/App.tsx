@@ -10,10 +10,14 @@ type Analysis = {
   redFlags: string[];
   whatToEmphasize: string[];
   applicationMessage: string;
+  companyName: string;
+  jobName: string;
   interviewRisk: "Low" | "Medium" | "High";
 };
 
-const API_URL = import.meta.env.VITE_API_URL;
+const API_URL = import.meta.env.PROD
+  ? import.meta.env.VITE_API_URL
+  : "http://localhost:3001";
 
 function App() {
   const [cv, setCv] = useState("");
@@ -69,6 +73,7 @@ function App() {
     });
 
     const data = await res.json();
+    console.log("### data", data);
     setAnalysis(data);
     setLoading(false);
   }
@@ -143,6 +148,8 @@ function App() {
 
       {analysis && (
         <section className="results">
+          <h2 className="companyName">{analysis.companyName}</h2>
+          <h3 className="companyName">{analysis.jobName}</h3>
           <div
             className={`scoreCard liftCard ${getScoreClass(analysis.matchScore)}`}
           >

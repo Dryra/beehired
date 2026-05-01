@@ -17,9 +17,10 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
-const DEMO_MODE = process.env.DEMO_MODE === "true";
+const DEMO_MODE = process.env.DEMO_MODE == "true";
 
 app.post("/api/analyze", async (req, res) => {
+  console.log("demo mode", DEMO_MODE);
   // For demo purposes
   if (DEMO_MODE) {
     return res.json({
@@ -45,6 +46,8 @@ app.post("/api/analyze", async (req, res) => {
       applicationMessage:
         "Hi, I’m a Senior Software Engineer with experience building frontend, XR, and AI-powered applications. BeeHired reflects my interest in practical AI product development...",
       interviewRisk: "Medium",
+      jobName: "Senior Software Engineer",
+      companyName: "Awesome Company",
     });
   }
 
@@ -61,6 +64,7 @@ app.post("/api/analyze", async (req, res) => {
 You are a strict career advisor.
 
 Analyze the candidate CV against the job description.
+Extract company name and job name from job description if possible.
 
 Return ONLY valid JSON with this structure:
 {
@@ -72,7 +76,9 @@ Return ONLY valid JSON with this structure:
   "redFlags": string[],
   "whatToEmphasize": string[],
   "applicationMessage": string,
-  "interviewRisk": "Low" | "Medium" | "High"
+  "interviewRisk": "Low" | "Medium" | "High",
+  "companyName": string,
+  "jobName": string
 }
 
 Scoring:

@@ -17,7 +17,8 @@ body {
   position: relative;
   min-height: 100svh;
   .links {
-    right: 0;
+    right: 24px;
+    top: 85px;
     display: flex;
     position: absolute;
     .jobsListButton {
@@ -330,9 +331,12 @@ body {
     width: min(100% - 32px, 1200px);
     padding: 32px 0;
 
-    .jobsList {
-      width: 36px !important;
-      height: 36px !important;
+    .links {
+      top: 49px;
+      .jobsList {
+        width: 36px !important;
+        height: 36px !important;
+      }
     }
 
     .hero {
@@ -417,7 +421,9 @@ body {
   .app {
     width: min(100% - 20px, 1200px);
     padding: 24px 24px;
-
+    .links {
+      top: 24px;
+    }
     .jobsList {
       width: 24px;
       height: 24px;

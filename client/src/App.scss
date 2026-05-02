@@ -17,9 +17,9 @@ body {
   position: relative;
   min-height: 100svh;
   .links {
+    right: 0;
     display: flex;
     position: absolute;
-    justify-self: end;
     .jobsListButton {
       margin-left: auto;
       cursor: pointer;
@@ -37,6 +37,11 @@ body {
         transform: translateY(-1px);
       }
     }
+  }
+
+  .analyzeSection {
+    display: flex;
+    flex-direction: column;
   }
 
   .honeycombBg {

@@ -1,0 +1,83 @@
+<svg width="200" height="200" viewBox="0 0 680 680" role="img" xmlns="http://www.w3.org/2000/svg">
+  <title>Sad bee icon</title>
+  <desc>A sad bee emoji-style icon with drooping antennae, teary eyes, and a frown</desc>
+  <defs>
+    <style>
+      .bee-body { fill: #FACC15; }
+      .bee-stripe { fill: #2B1E00; }
+      .bee-wing { fill: rgba(180,220,255,0.55); stroke: #a0c8ef; stroke-width: 2; }
+      .bee-eye-white { fill: #fff; }
+      .bee-pupil { fill: #2B1E00; }
+      .bee-tear { fill: #90caff; }
+      .bee-face-line { fill: none; stroke: #2B1E00; stroke-width: 5; stroke-linecap: round; }
+      .bee-antenna-line { fill: none; stroke: #2B1E00; stroke-width: 5; stroke-linecap: round; }
+      .bee-antenna-ball { fill: #2B1E00; }
+      .bee-stinger { fill: #c8850a; }
+      .bee-blush { fill: rgba(255,120,100,0.28); }
+    </style>
+  </defs>
+
+  <!-- Wings (behind body) -->
+  <g class="left-wing bee-wing">
+  	<ellipse cx="270" cy="272" rx="90" ry="50" transform="rotate(-22 270 272)" />
+  	<ellipse cx="278" cy="315" rx="65" ry="36" transform="rotate(-15 278 315)"/>
+  
+  </g>
+  <g class="right-wing bee-wing">
+  <ellipse cx="402" cy="315" rx="65" ry="36" transform="rotate(15 402 315)"/>
+  <ellipse cx="410" cy="272" rx="90" ry="50" transform="rotate(22 410 272)"/>
+  </g>
+  
+ 
+
+  <!-- Body (abdomen - lower oval) -->
+  <ellipse cx="340" cy="430" rx="95" ry="118" class="bee-body"/>
+  <!-- Stripes on abdomen -->
+  <rect x="246" y="390" width="188" height="26" rx="6" class="bee-stripe" opacity="0.85"/>
+  <rect x="248" y="432" width="184" height="26" rx="6" class="bee-stripe" opacity="0.85"/>
+  <rect x="255" y="473" width="170" height="26" rx="6" class="bee-stripe" opacity="0.85"/>
+  <ellipse cx="340" cy="430" rx="95" ry="118" fill="none" stroke="#c8850a" stroke-width="3"/>
+
+  <!-- Stinger -->
+  <ellipse cx="340" cy="544" rx="14" ry="8" class="bee-stinger"/>
+  <polygon points="340,548 328,570 352,570" class="bee-stinger"/>
+
+  <!-- Head -->
+  <ellipse cx="340" cy="308" rx="96" ry="90" class="bee-body"/>
+  <ellipse cx="340" cy="308" rx="96" ry="90" fill="none" stroke="#c8850a" stroke-width="3"/>
+
+  <!-- Cheek blush -->
+  <ellipse cx="278" cy="330" rx="28" ry="16" class="bee-blush"/>
+  <ellipse cx="402" cy="330" rx="28" ry="16" class="bee-blush"/>
+
+  <!-- Eyes -->
+  <ellipse cx="308" cy="298" rx="22" ry="24" class="bee-eye-white"/>
+  <ellipse cx="372" cy="298" rx="22" ry="24" class="bee-eye-white"/>
+  <!-- Pupils -->
+  <ellipse cx="311" cy="302" rx="11" ry="13" class="bee-pupil"/>
+  <ellipse cx="375" cy="302" rx="11" ry="13" class="bee-pupil"/>
+  <!-- Pupil shine -->
+  <circle cx="315" cy="297" r="4" fill="#fff"/>
+  <circle cx="379" cy="297" r="4" fill="#fff"/>
+
+  <!-- Sad eyebrows -->
+  <path d="M290 278 Q308 268 322 274" class="bee-face-line" stroke-width="5"/>
+  <path d="M390 278 Q372 268 358 274" class="bee-face-line" stroke-width="5"/>
+
+ 
+
+  <!-- Sad mouth (frown) -->
+  <path d="M312 348 Q340 334 368 348" class="bee-face-line"/>
+
+  <!-- Antennae (drooping sadly) -->
+  <path d="M318 222 Q295 185 272 158" class="bee-antenna-line"/>
+  <circle cx="268" cy="152" r="10" class="bee-antenna-ball"/>
+  <path d="M362 222 Q385 185 408 158" class="bee-antenna-line"/>
+  <circle cx="412" cy="152" r="10" class="bee-antenna-ball"/>
+
+  <!-- Little legs -->
+  <path d="M255 388 Q230 400 215 420" class="bee-antenna-line" stroke-width="4"/>
+  <path d="M255 415 Q228 428 214 450" class="bee-antenna-line" stroke-width="4"/>
+  <path d="M425 388 Q450 400 465 420" class="bee-antenna-line" stroke-width="4"/>
+  <path d="M425 415 Q452 428 466 450" class="bee-antenna-line" stroke-width="4"/>
+</svg>

@@ -55,6 +55,11 @@ body {
   min-height: 100svh;
 }
 
+p,
+span {
+  opacity: 0.8;
+}
+
 h1,
 h2,
 h3 {
@@ -111,7 +116,7 @@ button {
   border-radius: 999px;
   background: var(--bee);
   color: #0f172a;
-  font-weight: 900;
+  font-weight: 700;
   cursor: pointer;
   transition:
     transform 0.18s ease,

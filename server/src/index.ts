@@ -6,6 +6,34 @@ import cvRoutes from "./routes/cvRoutes";
 
 dotenv.config();
 
+const EXAMPLE_JSON = {
+  matchScore: 78,
+  verdict: "Apply if interested",
+  summary:
+    "This role is a good potential match, with strong overlap in frontend, real-time systems, and AI product integration.",
+  strongMatches: [
+    "React/TypeScript",
+    "AI API integration",
+    "Product-focused frontend development",
+  ],
+  missingSkills: [
+    "Specific domain experience",
+    "Advanced cloud infrastructure",
+  ],
+  redFlags: ["Role may involve more backend ownership than expected"],
+  whatToEmphasize: [
+    "AI product integration",
+    "Frontend architecture",
+    "Real-world product thinking",
+  ],
+  applicationMessage:
+    "Hi, I’m a Senior Software Engineer with experience building frontend, XR, and AI-powered applications. BeeHired reflects my interest in practical AI product development...",
+  interviewRisk: "Medium",
+  jobName: "Senior Software Engineer",
+  companyName: "Awesome Company",
+  estimatedSalary: "80000",
+};
+
 const app = express();
 app.use(cors());
 app.use(express.json({ limit: "2mb" }));
@@ -17,38 +45,14 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
-const DEMO_MODE = process.env.DEMO_MODE == "true";
+const DEMO_MODE = process.env.DEMO_MODE;
 
 app.post("/api/analyze", async (req, res) => {
   console.log("demo mode", DEMO_MODE);
   // For demo purposes
-  if (DEMO_MODE) {
-    return res.json({
-      matchScore: 78,
-      verdict: "Apply if interested",
-      summary:
-        "This role is a good potential match, with strong overlap in frontend, real-time systems, and AI product integration.",
-      strongMatches: [
-        "React/TypeScript",
-        "AI API integration",
-        "Product-focused frontend development",
-      ],
-      missingSkills: [
-        "Specific domain experience",
-        "Advanced cloud infrastructure",
-      ],
-      redFlags: ["Role may involve more backend ownership than expected"],
-      whatToEmphasize: [
-        "AI product integration",
-        "Frontend architecture",
-        "Real-world product thinking",
-      ],
-      applicationMessage:
-        "Hi, I’m a Senior Software Engineer with experience building frontend, XR, and AI-powered applications. BeeHired reflects my interest in practical AI product development...",
-      interviewRisk: "Medium",
-      jobName: "Senior Software Engineer",
-      companyName: "Awesome Company",
-    });
+  if (DEMO_MODE === "true") {
+    console.log("showing demo mode");
+    return res.json(EXAMPLE_JSON);
   }
 
   try {
@@ -65,6 +69,7 @@ You are a strict career advisor.
 
 Analyze the candidate CV against the job description.
 Extract company name and job name from job description if possible.
+Estimate yearly salary based on the job description if possible.
 
 Return ONLY valid JSON with this structure:
 {
@@ -78,7 +83,8 @@ Return ONLY valid JSON with this structure:
   "applicationMessage": string,
   "interviewRisk": "Low" | "Medium" | "High",
   "companyName": string,
-  "jobName": string
+  "jobName": string,
+  "estimatedSalary": string
 }
 
 Scoring:

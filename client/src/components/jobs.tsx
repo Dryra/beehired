@@ -3,14 +3,30 @@ import { getScoreClass, type SavedAnalysis } from "../App";
 import "./jobs.scss";
 import DeleteIcon from "../assets/delete.svg?react";
 import LikeIcon from "../assets/favorite.svg?react";
+import SadBeeIcon from "../assets/sad_bee.svg?react";
 
 // Create a JobsList component/page
 export function JobsList({ onBack }: JobsListProps) {
   const [openJobId, setOpenJobId] = useState<string | null>(null);
 
-  const jobs: SavedAnalysis[] = JSON.parse(
-    localStorage.getItem("savedAnalyses") || "[]"
-  ).sort((a: SavedAnalysis, b: SavedAnalysis) => b.matchScore - a.matchScore);
+  const [jobs, setJobs] = useState<SavedAnalysis[]>(() =>
+    JSON.parse(localStorage.getItem("savedAnalyses") || "[]").sort(
+      (a: SavedAnalysis, b: SavedAnalysis) => b.matchScore - a.matchScore
+    )
+  );
+
+  const [pendingDeleteJob, setPendingDeleteJob] =
+    useState<SavedAnalysis | null>(null);
+
+  function confirmDelete() {
+    if (!pendingDeleteJob) return;
+
+    const updatedJobs = jobs.filter((job) => job.id !== pendingDeleteJob.id);
+
+    setJobs(updatedJobs);
+    localStorage.setItem("savedAnalyses", JSON.stringify(updatedJobs));
+    setPendingDeleteJob(null);
+  }
 
   return (
     <main className="jobsPage">
@@ -23,6 +39,15 @@ export function JobsList({ onBack }: JobsListProps) {
         </section>
 
         <section className="results">
+          {!(jobs.length > 0) && (
+            <div className="noJobResults">
+              <SadBeeIcon className="sadBee" />
+              <p>
+                The hive did not find any saved jobs, start checking your fit,
+                the results will be saved here{" "}
+              </p>
+            </div>
+          )}
           {jobs.map((job) => {
             const isOpen = openJobId === job.id;
 
@@ -42,8 +67,14 @@ export function JobsList({ onBack }: JobsListProps) {
                     <p>Estimated Salary: {job.estimatedSalary}</p>
                   </div>
                   <div className="settings">
-                    <DeleteIcon className="delete"></DeleteIcon>
-                    <LikeIcon className="like"></LikeIcon>
+                    <DeleteIcon
+                      className="delete"
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        setPendingDeleteJob(job);
+                      }}
+                    />
+                    <LikeIcon className="like" />
                   </div>
                 </div>
                 {isOpen && (
@@ -80,6 +111,24 @@ export function JobsList({ onBack }: JobsListProps) {
           })}
         </section>
       </div>
+      {pendingDeleteJob && (
+        <div className="modalOverlay" onClick={() => setPendingDeleteJob(null)}>
+          <div
+            className="confirmModal"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <h2>Delete saved job?</h2>
+            <p>
+              Delete <b>{pendingDeleteJob.jobName}</b> at{" "}
+              <b>{pendingDeleteJob.companyName}</b>?
+            </p>
+            <div className="yesNoButtons">
+              <button onClick={confirmDelete}>Yes</button>
+              <button onClick={() => setPendingDeleteJob(null)}>No</button>
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   );
 }

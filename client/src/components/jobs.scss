@@ -1,12 +1,11 @@
+@use "../styles/variables" as *;
+
 .jobsPage {
   width: min(1200px, 92%);
   margin: 0 auto;
   inset: 0;
   z-index: 50;
   overflow-y: auto;
-
-  .results {
-  }
 
   .jobDetails {
     margin: 0 0 20px;
@@ -18,6 +17,46 @@
 
   .jobSection {
     display: flex;
+    gap: 24px;
+    width: 100%;
+    .settings {
+      display: flex;
+      flex-direction: column;
+      margin-left: auto;
+      gap: 24px;
+      .delete {
+        width: 46px;
+        height: 46px;
+        path {
+          fill: black;
+        }
+      }
+      .like {
+        width: 46px;
+        height: 46px;
+        path {
+          fill: black;
+        }
+      }
+      .delete:hover {
+        path {
+          fill: $primary;
+        }
+        transform: translateY(-1px);
+      }
+      .like:hover {
+        path {
+          fill: $primary;
+        }
+        transform: translateY(-1px);
+      }
+    }
+  }
+
+  .jobOffer {
+    h2 {
+      color: #111827;
+    }
   }
 
   .cardExtension {

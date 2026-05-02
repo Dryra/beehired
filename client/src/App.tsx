@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import "./App.scss";
 import { JobsList } from "./components/jobs";
-import honeycombIcon from "./assets/icon-honeycomb.svg";
+import HoneycombIcon from "./assets/icon-honeycomb.svg?react";
 
 type Analysis = {
   matchScore: number;
@@ -15,6 +15,7 @@ type Analysis = {
   companyName: string;
   jobName: string;
   interviewRisk: "Low" | "Medium" | "High";
+  estimatedSalary: string;
 };
 
 // Add near your other types
@@ -154,11 +155,7 @@ function App() {
           <div className="analyzeSection">
             <section className="links">
               <div className="jobsListButton" onClick={showJobsList}>
-                <img
-                  className="jobsList"
-                  src={honeycombIcon}
-                  alt="My Jobs List"
-                />
+                <HoneycombIcon className="jobsList" />
               </div>
             </section>
             <section className="hero">
@@ -233,7 +230,13 @@ function App() {
                       {getScoreLabel(analysis.matchScore)}
                     </span>
                     <h2>{analysis.verdict}</h2>
-                    <p>Interview risk: {analysis.interviewRisk}</p>
+                    <p>
+                      <b>Interview risk:</b> {analysis.interviewRisk}
+                    </p>
+                    <p>
+                      <b>Estimated Salary:</b> {analysis.estimatedSalary} (This
+                      is an estimation and could be wrong)
+                    </p>
                   </div>
                 </div>
 
@@ -318,7 +321,7 @@ function ResultCard({ title, items }: { title: string; items: string[] }) {
   );
 }
 
-function getScoreClass(score: number) {
+export function getScoreClass(score: number) {
   if (score >= 80) return "scoreHigh";
   if (score >= 65) return "scoreMedium";
   return "scoreLow";

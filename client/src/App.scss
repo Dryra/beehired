@@ -17,20 +17,23 @@ body {
 
   .links {
     display: flex;
+    position: absolute;
+    justify-self: end;
     .jobsListButton {
       margin-left: auto;
       cursor: pointer;
       .jobsList {
         width: 46px;
-        filter: brightness(0) saturate(100%) invert(67%) sepia(90%)
-          saturate(662%) hue-rotate(359deg) brightness(103%) contrast(105%);
+        height: 46px;
+        path {
+          fill: black;
+        }
       }
       .jobsList:hover {
-        svg {
+        path {
           fill: $primary;
         }
         transform: translateY(-1px);
-        box-shadow: 0 16px 36px rgba(250, 204, 21, 0.25);
       }
     }
   }
@@ -187,12 +190,12 @@ body {
       background: $card;
 
       &.scoreHigh {
-        border-color: rgba(34, 197, 94, 0.45);
-
+        border-color: rgba(63, 197, 112, 0.45);
+        border-width: 2px;
         .score,
         .statusPill {
-          background: #22c55e;
-          color: #052e16;
+          background: $green;
+          color: white;
         }
       }
 
@@ -202,16 +205,18 @@ body {
         .score,
         .statusPill {
           background: $primary;
-          color: $bg;
+          color: white;
         }
       }
 
       &.scoreLow {
         border-color: rgba(239, 68, 68, 0.45);
-
+        h2 {
+          color: $red;
+        }
         .score,
         .statusPill {
-          background: #ef4444;
+          background: $red;
           color: #fff;
         }
       }

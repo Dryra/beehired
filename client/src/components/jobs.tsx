@@ -1,6 +1,8 @@
 import { useState } from "react";
-import type { SavedAnalysis } from "../App";
+import { getScoreClass, type SavedAnalysis } from "../App";
 import "./jobs.scss";
+import DeleteIcon from "../assets/delete.svg?react";
+import LikeIcon from "../assets/favorite.svg?react";
 
 // Create a JobsList component/page
 export function JobsList({ onBack }: JobsListProps) {
@@ -26,7 +28,7 @@ export function JobsList({ onBack }: JobsListProps) {
 
             return (
               <div
-                className="scoreCard liftCard cardExtension"
+                className={`scoreCard liftCard cardExtension ${getScoreClass(job.matchScore)}`}
                 key={job.id}
                 onClick={() => setOpenJobId(isOpen ? null : job.id)}
               >
@@ -37,6 +39,11 @@ export function JobsList({ onBack }: JobsListProps) {
                     <h3>{job.jobName}</h3>
                     <p>{job.verdict}</p>
                     <p>Interview risk: {job.interviewRisk}</p>
+                    <p>Estimated Salary: {job.estimatedSalary}</p>
+                  </div>
+                  <div className="settings">
+                    <DeleteIcon className="delete"></DeleteIcon>
+                    <LikeIcon className="like"></LikeIcon>
                   </div>
                 </div>
                 {isOpen && (

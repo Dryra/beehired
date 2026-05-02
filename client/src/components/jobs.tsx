@@ -62,9 +62,15 @@ export function JobsList({ onBack }: JobsListProps) {
                   <div className="jobOffer">
                     <h2>{job.companyName}</h2>
                     <h3>{job.jobName}</h3>
-                    <p>{job.verdict}</p>
-                    <p>Interview risk: {job.interviewRisk}</p>
-                    <p>Estimated Salary: {job.estimatedSalary}</p>
+                    <p>
+                      <b>{job.verdict}</b>
+                    </p>
+                    <p>
+                      <b>Interview risk:</b> {job.interviewRisk}
+                    </p>
+                    <p>
+                      <b>Estimated Salary:</b> {job.estimatedSalary}
+                    </p>
                   </div>
                   <div className="settings">
                     <DeleteIcon

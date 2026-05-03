@@ -3,36 +3,9 @@ import cors from "cors";
 import dotenv from "dotenv";
 import OpenAI from "openai";
 import cvRoutes from "./routes/cvRoutes";
+import { getRandomJob } from "./utils/testDataUtils";
 
 dotenv.config();
-
-const EXAMPLE_JSON = {
-  matchScore: 78,
-  verdict: "Apply if interested",
-  summary:
-    "This role is a good potential match, with strong overlap in frontend, real-time systems, and AI product integration.",
-  strongMatches: [
-    "React/TypeScript",
-    "AI API integration",
-    "Product-focused frontend development",
-  ],
-  missingSkills: [
-    "Specific domain experience",
-    "Advanced cloud infrastructure",
-  ],
-  redFlags: ["Role may involve more backend ownership than expected"],
-  whatToEmphasize: [
-    "AI product integration",
-    "Frontend architecture",
-    "Real-world product thinking",
-  ],
-  applicationMessage:
-    "Hi, I’m a Senior Software Engineer with experience building frontend, XR, and AI-powered applications. BeeHired reflects my interest in practical AI product development...",
-  interviewRisk: "Medium",
-  jobName: "Senior Software Engineer",
-  companyName: "Awesome Company",
-  estimatedSalary: "80000",
-};
 
 const app = express();
 app.use(cors());
@@ -46,13 +19,21 @@ const openai = new OpenAI({
 });
 
 const DEMO_MODE = process.env.DEMO_MODE;
+const DEMO_TOKEN = process.env.DEMO_TOKEN;
 
 app.post("/api/analyze", async (req, res) => {
   console.log("demo mode", DEMO_MODE);
   // For demo purposes
   if (DEMO_MODE === "true") {
     console.log("showing demo mode");
-    return res.json(EXAMPLE_JSON);
+    return res.json(getRandomJob());
+  }
+
+  const token = req.headers["x-demo-token"];
+
+  if (!token || token !== DEMO_TOKEN) {
+    //return res.status(403).json({ error: "Unauthorized" });
+    return res.json(getRandomJob());
   }
 
   try {

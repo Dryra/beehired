@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import "./App.scss";
 import { JobsList } from "./components/jobs";
 import HoneycombIcon from "./assets/icon-honeycomb.svg?react";
+import { getScoreClass, getScoreLabel } from "./utils/scoreUtils";
 
 type Analysis = {
   matchScore: number;
@@ -43,6 +44,15 @@ function App() {
 
   const [showJobs, setShowJobs] = useState(false);
 
+  const [demoToken, setDemoToken] = useState<string | null>(null);
+
+  const [showDemoModal, setShowDemoModal] = useState(false);
+  const [showDemoBanner, setShowDemoBanner] = useState(true);
+  const [emailCopied, setEmailCopied] = useState(false);
+
+  const linkedInUrl = "https://www.linkedin.com/in/ahmeddrira/";
+  const contactEmail = "dryraa@gmail.com";
+
   function showJobsList() {
     setShowJobs(true);
   }
@@ -70,6 +80,24 @@ function App() {
 
     localStorage.setItem("savedAnalyses", JSON.stringify(updatedJobs));
   };
+
+  async function copyContactEmail() {
+    await navigator.clipboard.writeText(contactEmail);
+    setEmailCopied(true);
+
+    setTimeout(() => setEmailCopied(false), 1600);
+  }
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const token = params.get("token");
+
+    if (token) {
+      setDemoToken(token);
+      // clean up url
+      window.history.replaceState({}, document.title, "/");
+    }
+  }, []);
 
   useEffect(() => {
     if (!analysis) return;
@@ -128,7 +156,10 @@ function App() {
 
     const res = await fetch(`${API_URL}/api/analyze`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        ...(demoToken ? { "x-demo-token": demoToken } : {}),
+      },
       body: JSON.stringify({ cv, jobDescription }),
     });
 
@@ -277,6 +308,68 @@ function App() {
         )}
 
         {showJobs && <JobsList onBack={hideJobsList} />}
+        {showDemoBanner && (
+          <div className="demoBanner">
+            {demoToken ? (
+              <span>
+                AI Mode Enabled: showcasing capabilities with real AI output.
+              </span>
+            ) : (
+              <>
+                <span>
+                  Demo mode enabled: showcasing capabilities with sample output.
+                </span>
+                <button type="button" onClick={() => setShowDemoModal(true)}>
+                  Request AI Access
+                </button>
+              </>
+            )}
+
+            <button
+              className="demoBannerClose"
+              type="button"
+              aria-label="Close demo mode banner"
+              onClick={() => setShowDemoBanner(false)}
+            >
+              ×
+            </button>
+          </div>
+        )}
+
+        {showDemoModal && (
+          <div className="modalBackdrop" role="presentation">
+            <section
+              className="demoModal"
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="demo-modal-title"
+            >
+              <button
+                className="modalClose"
+                type="button"
+                aria-label="Close modal"
+                onClick={() => setShowDemoModal(false)}
+              >
+                ×
+              </button>
+
+              <h2 id="demo-modal-title">Request full AI access</h2>
+              <p>
+                The public version runs in demo mode to protect API usage. For a
+                live AI-powered demo, contact me and I’ll provide access.
+              </p>
+
+              <div className="modalActions">
+                <a href={linkedInUrl} target="_blank" rel="noreferrer">
+                  Contact on LinkedIn
+                </a>
+                <button type="button" onClick={copyContactEmail}>
+                  {emailCopied ? "Email copied" : "Copy email"}
+                </button>
+              </div>
+            </section>
+          </div>
+        )}
       </main>
     </>
   );
@@ -321,15 +414,4 @@ function ResultCard({ title, items }: { title: string; items: string[] }) {
   );
 }
 
-export function getScoreClass(score: number) {
-  if (score >= 80) return "scoreHigh";
-  if (score >= 65) return "scoreMedium";
-  return "scoreLow";
-}
-
-function getScoreLabel(score: number) {
-  if (score >= 80) return "Strong fit";
-  if (score >= 65) return "Potential fit";
-  return "Risky fit";
-}
 export default App;

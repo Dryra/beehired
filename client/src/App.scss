@@ -514,3 +514,164 @@ body {
     box-shadow: 0 18px 50px rgba(250, 204, 21, 0.12);
   }
 }
+
+.demoBanner {
+  position: fixed;
+  left: 50%;
+  bottom: 18px;
+  z-index: 20;
+  width: min(calc(100% - 32px), 760px);
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 12px 16px;
+  border: 1px solid rgba(250, 204, 21, 0.35);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.82);
+  box-shadow: 0 14px 38px rgba(15, 23, 42, 0.14);
+  backdrop-filter: blur(18px) saturate(145%);
+  -webkit-backdrop-filter: blur(18px) saturate(145%);
+  color: $muted;
+  font-size: 13px;
+
+  button {
+    border: none;
+    border-radius: 999px;
+    background: $primary;
+    color: $bg;
+    font-weight: 800;
+    white-space: nowrap;
+    cursor: pointer;
+
+    &:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 10px 24px rgba(250, 204, 21, 0.22);
+    }
+  }
+
+  .demoBannerClose {
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    display: grid;
+    place-items: center;
+    flex: 0 0 auto;
+    background: none;
+    color: $text;
+    font-size: 18px;
+    line-height: 1;
+    position: absolute;
+    right: 12px;
+
+    &:hover {
+      box-shadow: none;
+    }
+  }
+}
+
+.modalBackdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(15, 23, 42, 0.38);
+}
+
+.demoModal {
+  position: relative;
+  width: min(100%, 440px);
+  padding: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.42);
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: 0 24px 70px rgba(15, 23, 42, 0.24);
+
+  h2 {
+    margin: 0 32px 12px 0;
+  }
+
+  p {
+    margin: 0;
+    color: $muted;
+    line-height: 1.6;
+  }
+}
+
+.modalClose {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 34px;
+  height: 34px;
+  border: none;
+  border-radius: 50%;
+  background: none;
+  color: $text;
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.modalClose:hover {
+  background: none;
+  color: $primary;
+  box-shadow: none !important;
+}
+
+.modalActions {
+  display: flex;
+  gap: 12px;
+  margin-top: 22px;
+
+  a,
+  button {
+    flex: 1;
+    border-radius: 999px;
+    padding: 11px 14px;
+    font-weight: 800;
+    text-align: center;
+    text-decoration: none;
+    cursor: pointer;
+  }
+
+  a {
+    background: $primary;
+    color: $bg;
+  }
+
+  button {
+    border: 1px solid rgba(250, 204, 21, 0.35);
+    background: rgba(250, 204, 21, 0.12);
+    color: $primary;
+  }
+}
+
+@media (max-width: 640px) {
+  .demoBanner {
+    flex-direction: column;
+    align-items: stretch;
+    border-radius: 20px;
+    text-align: center;
+
+    button {
+      width: 100%;
+    }
+
+    .demoBannerClose {
+      position: absolute;
+      top: -36px;
+      right: 8px;
+      width: 28px;
+      padding: 0;
+      background: $primary;
+    }
+  }
+
+  .modalActions {
+    flex-direction: column;
+  }
+}

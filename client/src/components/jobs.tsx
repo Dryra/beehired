@@ -1,9 +1,10 @@
 import { useState } from "react";
-import { getScoreClass, type SavedAnalysis } from "../App";
+import { type SavedAnalysis } from "../App";
 import "./jobs.scss";
 import DeleteIcon from "../assets/delete.svg?react";
 import LikeIcon from "../assets/favorite.svg?react";
 import SadBeeIcon from "../assets/sad_bee.svg?react";
+import { getScoreClass } from "../utils/scoreUtils";
 
 // Create a JobsList component/page
 export function JobsList({ onBack }: JobsListProps) {

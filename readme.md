@@ -82,6 +82,7 @@ npm install
 
 ```bash
 OPENAI_API_KEY=your_openai_api_key_here
+DEMO_MODE=false
 ```
 
 ### 5. Run frontend
@@ -93,10 +94,10 @@ npm run dev
 ### 6. Run Backend
 
 ```bash
-npx tsx src/index.ts
+npm run dev
 ```
 
 ### 👨‍💻 Author
 
-_Ahmed Drira_
+_Ahmed Drira_:
 Senior Software Engineer focused on frontend, XR, real-time systems, and AI-powered interactive applications.

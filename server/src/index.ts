@@ -30,6 +30,7 @@ app.post("/api/analyze", async (req, res) => {
   }
 
   const token = req.headers["x-demo-token"];
+  console.log("### found token", token);
 
   if (!token || token !== DEMO_TOKEN) {
     //return res.status(403).json({ error: "Unauthorized" });

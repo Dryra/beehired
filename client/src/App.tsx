@@ -164,7 +164,6 @@ function App() {
     });
 
     const data = await res.json();
-    console.log("### data", data);
     setAnalysis(data);
     setLoading(false);
   }

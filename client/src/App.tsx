@@ -28,6 +28,9 @@ export type SavedAnalysis = Analysis & {
 const API_URL = import.meta.env.PROD
   ? import.meta.env.VITE_API_URL
   : "http://localhost:3001";
+const LINKEDIN_URL =
+  import.meta.env.VITE_LINKEDIN_URL ?? "https://www.linkedin.com/in/ahmeddrira/";
+const CONTACT_EMAIL = import.meta.env.VITE_CONTACT_EMAIL ?? "dryraa@gmail.com";
 
 function App() {
   const [cv, setCv] = useState("");
@@ -49,9 +52,6 @@ function App() {
   const [showDemoModal, setShowDemoModal] = useState(false);
   const [showDemoBanner, setShowDemoBanner] = useState(true);
   const [emailCopied, setEmailCopied] = useState(false);
-
-  const linkedInUrl = "https://www.linkedin.com/in/ahmeddrira/";
-  const contactEmail = "dryraa@gmail.com";
 
   function showJobsList() {
     setShowJobs(true);
@@ -82,7 +82,7 @@ function App() {
   };
 
   async function copyContactEmail() {
-    await navigator.clipboard.writeText(contactEmail);
+    await navigator.clipboard.writeText(CONTACT_EMAIL);
     setEmailCopied(true);
 
     setTimeout(() => setEmailCopied(false), 1600);
@@ -359,7 +359,7 @@ function App() {
               </p>
 
               <div className="modalActions">
-                <a href={linkedInUrl} target="_blank" rel="noreferrer">
+                <a href={LINKEDIN_URL} target="_blank" rel="noreferrer">
                   Contact on LinkedIn
                 </a>
                 <button type="button" onClick={copyContactEmail}>

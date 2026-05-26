@@ -29,7 +29,8 @@ const API_URL = import.meta.env.PROD
   ? import.meta.env.VITE_API_URL
   : "http://localhost:3001";
 const LINKEDIN_URL =
-  import.meta.env.VITE_LINKEDIN_URL ?? "https://www.linkedin.com/in/ahmeddrira/";
+  import.meta.env.VITE_LINKEDIN_URL ??
+  "https://www.linkedin.com/in/ahmeddrira/";
 const CONTACT_EMAIL = import.meta.env.VITE_CONTACT_EMAIL ?? "dryraa@gmail.com";
 
 function App() {
@@ -192,7 +193,7 @@ function App() {
               <h1 className="header">
                 <div className="bee-header">🐝</div> BeeHired
               </h1>
-              <p className="tagline">The Bee that gets you in the Beesnees.</p>
+              <p className="tagline">The Bee that gets you hired!</p>
               <p className="subtitle">
                 Paste your CV or upload a PDF and a job description to get an
                 instant match score, missing skills, red flags, and a tailored

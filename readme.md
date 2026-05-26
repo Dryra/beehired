@@ -6,6 +6,24 @@ BeeHired is an AI-powered job fit analyzer that compares a candidate CV with a j
 
 It helps users understand whether a role is worth applying for by showing a match score, strong matches, missing skills, red flags, and a tailored application message.
 
+## 🔗 Live Demo
+
+[Try BeeHired](https://beehired-app.netlify.app/)
+
+## 🖼 Preview
+
+### Job fit analyzer
+
+![BeeHired job fit analyzer](docs/screenshots/beehired-job-list.png)
+
+### AI fit analysis
+
+![BeeHired AI fit analysis result](docs/screenshots/beehired-fit-analysis.png)
+
+### Saved jobs
+
+![BeeHired saved jobs](docs/screenshots/beehired-saved-jobs.png)
+
 ## ✨ Features
 
 - CV and job description analysis

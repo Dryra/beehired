@@ -42,7 +42,6 @@ app.post("/api/analyze", async (req, res) => {
   }
 
   const token = req.headers["x-demo-token"];
-  console.log("### found token", token);
 
   if (!isValidDemoToken(token)) {
     //return res.status(403).json({ error: "Unauthorized" });
@@ -83,8 +82,9 @@ If type is:
 - "explore": generate a curious and open response asking for more information
 - "decline": generate a polite recruiter rejection response
 
-Also add a not interested message.
+Also add a not interested message, where you briefly explain why not interested, and telling them they'd welcome other offers.
 The tone should be professional, concise, modern, and human.
+if the job description is in german, return the applicationMessage, responseStrategy message and notInterestedMessage in German.
 
 Return valid JSON only.
 

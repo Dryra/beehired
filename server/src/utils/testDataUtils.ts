@@ -18,6 +18,11 @@ export const EXAMPLE_JSON = [
     ],
     applicationMessage:
       "Hi, I’m a Senior Software Engineer specializing in frontend architecture and AI-powered applications. I’ve recently built BeeHired, a practical AI tool focused on real-world job decision support...",
+    responseStrategy: {
+      type: "apply",
+      message:
+        "Hi, I’m excited about this Senior Frontend Engineer role. My background in React, TypeScript, frontend architecture, and AI-powered product development seems closely aligned with what TechFlow is building, and I’d be glad to discuss how I can contribute.",
+    },
     interviewRisk: "Low",
     estimatedSalary: "€75,000 - €95,000",
     jobName: "Senior Frontend Engineer",
@@ -43,6 +48,11 @@ export const EXAMPLE_JSON = [
     ],
     applicationMessage:
       "Hi, I’m a frontend-focused engineer with strong experience building user-centric applications and integrating AI features into real products...",
+    responseStrategy: {
+      type: "explore",
+      message:
+        "Hi, thanks for sharing this opportunity. The frontend and product aspects sound interesting, and I’d like to better understand how much of the role is focused on backend, cloud infrastructure, and ownership expectations before deciding whether it’s the right fit.",
+    },
     interviewRisk: "Medium",
     estimatedSalary: "€65,000 - €80,000",
     jobName: "Fullstack Engineer",
@@ -70,6 +80,11 @@ export const EXAMPLE_JSON = [
     ],
     applicationMessage:
       "Hi, I’m a Senior Software Engineer focused on building AI-powered interactive systems. My recent project, BeeHired, demonstrates my ability to turn AI into a practical product...",
+    responseStrategy: {
+      type: "apply",
+      message:
+        "Hi, I’m very interested in the AI Product Engineer role. My recent work building AI-powered, interactive product experiences with React and TypeScript maps strongly to this opportunity, and I’d welcome the chance to talk further.",
+    },
     interviewRisk: "Low",
     estimatedSalary: "€85,000 - €110,000",
     jobName: "AI Product Engineer",
@@ -94,6 +109,11 @@ export const EXAMPLE_JSON = [
     ],
     applicationMessage:
       "Hi, I’m a software engineer with a strong focus on frontend and AI-driven applications. While my background is more frontend-oriented...",
+    responseStrategy: {
+      type: "decline",
+      message:
+        "Hi, thank you for reaching out. After reviewing the role, I don’t think it’s the right fit for my current direction, as I’m focused more on frontend architecture, AI-powered products, and user-facing engineering than backend infrastructure-heavy work.",
+    },
     interviewRisk: "High",
     estimatedSalary: "€70,000 - €90,000",
     jobName: "Backend Engineer",
@@ -123,6 +143,11 @@ export const EXAMPLE_JSON = [
     ],
     applicationMessage:
       "Hi, I’m a Senior Software Engineer who enjoys building clean, user-focused products. My recent project, BeeHired, reflects my approach to combining AI with intuitive frontend design...",
+    responseStrategy: {
+      type: "apply",
+      message:
+        "Hi, I’m interested in the Product Engineer role. I enjoy shipping clean, user-focused products quickly, and my experience with React, TypeScript, modern tooling, and AI-assisted workflows feels well aligned with StartupHive’s needs.",
+    },
     interviewRisk: "Medium",
     estimatedSalary: "€70,000 - €90,000",
     jobName: "Product Engineer",

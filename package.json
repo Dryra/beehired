@@ -1,4 +1,12 @@
 {
+  "scripts": {
+    "dev": "concurrently \"npm run dev --prefix server\" \"npm run dev --prefix client\""
+  },
+  "author": "Ahmed Drira",
+  "license": "ISC",
+  "dependencies": {
+    "concurrently": "^9.2.1"
+  },
   "devDependencies": {
     "prettier": "^3.8.3"
   }

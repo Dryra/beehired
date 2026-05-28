@@ -111,6 +111,13 @@ export function JobsList({ onBack }: JobsListProps) {
 
                     <h4>Application Message</h4>
                     <p>{job.applicationMessage}</p>
+
+                    <h4>Response strategy</h4>
+                    <p>{job.responseStrategy.type}</p>
+                    <p>{job.responseStrategy.message}</p>
+
+                    <h4>Not Interested Message</h4>
+                    <p>{job.notInterestedMessage}</p>
                   </section>
                 )}
               </div>

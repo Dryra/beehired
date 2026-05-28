@@ -4,6 +4,11 @@ import { JobsList } from "./components/jobs";
 import HoneycombIcon from "./assets/icon-honeycomb.svg?react";
 import { getScoreClass, getScoreLabel } from "./utils/scoreUtils";
 
+type responseStratType = {
+  type: "apply" | "decline" | "explore";
+  message: string;
+};
+
 type Analysis = {
   matchScore: number;
   verdict: string;
@@ -17,6 +22,8 @@ type Analysis = {
   jobName: string;
   interviewRisk: "Low" | "Medium" | "High";
   estimatedSalary: string;
+  responseStrategy: responseStratType;
+  notInterestedMessage: string;
 };
 
 // Add near your other types
@@ -46,9 +53,13 @@ function App() {
   const resultsRef = useRef<HTMLElement | null>(null);
   const lastAnalysisDataRef = useRef<string | null>(null);
 
+  const [responseCopied, setResponseCopied] = useState(false);
+  const [NotInterestedcopied, setNotInterestedCopied] = useState(false);
+
   const [showJobs, setShowJobs] = useState(false);
 
   const [demoToken, setDemoToken] = useState<string | null>(null);
+  const [isDemoTokenValid, setIsDemoTokenValid] = useState(false);
 
   const [showDemoModal, setShowDemoModal] = useState(false);
   const [showDemoBanner, setShowDemoBanner] = useState(true);
@@ -93,11 +104,35 @@ function App() {
     const params = new URLSearchParams(window.location.search);
     const token = params.get("token");
 
-    if (token) {
-      setDemoToken(token);
-      // clean up url
-      window.history.replaceState({}, document.title, "/");
+    if (!token) return;
+    const candidateToken = token;
+
+    async function validateDemoToken() {
+      try {
+        const response = await fetch(`${API_URL}/api/demo-token/validate`, {
+          headers: {
+            "x-demo-token": candidateToken,
+          },
+        });
+
+        const data = await response.json();
+
+        if (data.valid) {
+          setDemoToken(candidateToken);
+          setIsDemoTokenValid(true);
+          // clean up url
+          //window.history.replaceState({}, document.title, "/");
+          return;
+        }
+      } catch (error) {
+        console.error("Could not validate demo token", error);
+      }
+
+      setDemoToken(null);
+      setIsDemoTokenValid(false);
     }
+
+    validateDemoToken();
   }, []);
 
   useEffect(() => {
@@ -159,7 +194,7 @@ function App() {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        ...(demoToken ? { "x-demo-token": demoToken } : {}),
+        ...(isDemoTokenValid && demoToken ? { "x-demo-token": demoToken } : {}),
       },
       body: JSON.stringify({ cv, jobDescription }),
     });
@@ -176,6 +211,24 @@ function App() {
     setCopied(true);
 
     setTimeout(() => setCopied(false), 1600);
+  }
+
+  async function copyResponseMessage() {
+    if (!analysis?.responseStrategy.message) return;
+
+    await navigator.clipboard.writeText(analysis.responseStrategy.message);
+    setResponseCopied(true);
+
+    setTimeout(() => setCopied(false), 1600);
+  }
+
+  async function copyNotInterestedMessage() {
+    if (!analysis?.notInterestedMessage) return;
+
+    await navigator.clipboard.writeText(analysis.notInterestedMessage);
+    setNotInterestedCopied(true);
+
+    setTimeout(() => setNotInterestedCopied(false), 1600);
   }
 
   return (
@@ -209,6 +262,7 @@ function App() {
                     type="file"
                     accept="application/pdf"
                     onChange={handlePdfUpload}
+                    disabled={isParsingPdf}
                   />
                   {isParsingPdf
                     ? "The hive is reading the pdf..."
@@ -302,6 +356,35 @@ function App() {
 
                   <p>{analysis.applicationMessage}</p>
                 </div>
+
+                <div className="messageBox liftCard">
+                  <div className="messageHeader">
+                    <h3>Response Strategry</h3>
+                    <button
+                      className="copyButton"
+                      onClick={copyResponseMessage}
+                    >
+                      {responseCopied ? "Copied!" : "Copy message"}
+                    </button>
+                  </div>
+
+                  <h2>{analysis.responseStrategy.type}</h2>
+                  <p>{analysis.responseStrategy.message}</p>
+                </div>
+
+                <div className="messageBox liftCard">
+                  <div className="messageHeader">
+                    <h3>Not Interested Reply</h3>
+                    <button
+                      className="copyButton"
+                      onClick={copyNotInterestedMessage}
+                    >
+                      {NotInterestedcopied ? "Copied!" : "Copy message"}
+                    </button>
+                  </div>
+
+                  <p>{analysis.notInterestedMessage}</p>
+                </div>
               </section>
             )}
           </div>
@@ -310,7 +393,7 @@ function App() {
         {showJobs && <JobsList onBack={hideJobsList} />}
         {showDemoBanner && (
           <div className="demoBanner">
-            {demoToken ? (
+            {isDemoTokenValid ? (
               <span>
                 AI Mode Enabled: showcasing capabilities with real AI output.
               </span>

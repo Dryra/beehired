@@ -21,6 +21,18 @@ const openai = new OpenAI({
 const DEMO_MODE = process.env.DEMO_MODE;
 const DEMO_TOKEN = process.env.DEMO_TOKEN;
 
+function isValidDemoToken(token: string | string[] | undefined) {
+  return (
+    typeof token === "string" && Boolean(DEMO_TOKEN) && token === DEMO_TOKEN
+  );
+}
+
+app.get("/api/demo-token/validate", (req, res) => {
+  const token = req.headers["x-demo-token"];
+
+  res.json({ valid: isValidDemoToken(token) });
+});
+
 app.post("/api/analyze", async (req, res) => {
   console.log("demo mode", DEMO_MODE);
   // For demo purposes
@@ -32,7 +44,7 @@ app.post("/api/analyze", async (req, res) => {
   const token = req.headers["x-demo-token"];
   console.log("### found token", token);
 
-  if (!token || token !== DEMO_TOKEN) {
+  if (!isValidDemoToken(token)) {
     //return res.status(403).json({ error: "Unauthorized" });
     return res.json(getRandomJob());
   }
@@ -52,6 +64,29 @@ You are a strict career advisor.
 Analyze the candidate CV against the job description.
 Extract company name and job name from job description if possible.
 Estimate yearly salary based on the job description if possible.
+Determine the best response strategy.
+
+The responseStrategy.type must be one of:
+- "apply"
+- "explore"
+- "decline"
+
+Guidelines:
+- Use "apply" if the role is a strong strategic fit
+- Use "explore" if the role could be interesting but requires clarification or has mixed alignment
+- Use "decline" if the role is not aligned with the user's profile, goals, preferred technologies, seniority, or direction
+
+Then generate a professional response message based on the strategy.
+
+If type is:
+- "apply": generate an enthusiastic application or recruiter response
+- "explore": generate a curious and open response asking for more information
+- "decline": generate a polite recruiter rejection response
+
+Also add a not interested message.
+The tone should be professional, concise, modern, and human.
+
+Return valid JSON only.
 
 Return ONLY valid JSON with this structure:
 {
@@ -66,7 +101,12 @@ Return ONLY valid JSON with this structure:
   "interviewRisk": "Low" | "Medium" | "High",
   "companyName": string,
   "jobName": string,
-  "estimatedSalary": string
+  "estimatedSalary": string,
+  "responseStrategy": {
+  type: "apply" | "decline" | "explore";
+  message: string;
+  }
+  "notInterestedMessage":string
 }
 
 Scoring:

@@ -106,10 +106,18 @@ DEMO_MODE=false
 ### 5. Run frontend
 
 ```bash
+cd frontend
 npm run dev
 ```
 
 ### 6. Run Backend
+
+```bash
+cd server
+npm run dev
+```
+
+### 7. Run Frontend and Backend
 
 ```bash
 npm run dev

@@ -30,15 +30,14 @@ type Analysis = {
 export type SavedAnalysis = Analysis & {
   id: string;
   savedAt: string;
+  liked: boolean;
 };
 
 const API_URL = import.meta.env.PROD
   ? import.meta.env.VITE_API_URL
   : "http://localhost:3001";
-const LINKEDIN_URL =
-  import.meta.env.VITE_LINKEDIN_URL ??
-  "https://www.linkedin.com/in/ahmeddrira/";
-const CONTACT_EMAIL = import.meta.env.VITE_CONTACT_EMAIL ?? "dryraa@gmail.com";
+const LINKEDIN_URL = import.meta.env.VITE_LINKEDIN_URL;
+const CONTACT_EMAIL = import.meta.env.VITE_CONTACT_EMAIL;
 
 function App() {
   const [cv, setCv] = useState("");
@@ -84,6 +83,7 @@ function App() {
       ...analysis,
       id: crypto.randomUUID(),
       savedAt: new Date().toISOString(),
+      liked: false,
     };
 
     const updatedJobs = [...savedJobs, newSavedAnalysis].sort(

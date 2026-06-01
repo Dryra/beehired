@@ -187,6 +187,11 @@ body {
     margin-top: 32px;
     animation: resultIn 0.45s ease both;
 
+    .likedCard {
+      background: #d2be0469 !important;
+      background-color: #d2be04;
+    }
+
     .scoreCard {
       display: flex;
       gap: 24px;

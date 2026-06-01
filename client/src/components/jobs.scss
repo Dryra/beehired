@@ -67,6 +67,15 @@
           fill: black;
         }
       }
+
+      .likedIcon {
+        color: #e85d75;
+        fill: currentColor;
+        path {
+          fill: #e85d75;
+        }
+      }
+
       .delete:hover {
         path {
           fill: $primary;

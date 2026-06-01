@@ -34,7 +34,6 @@ app.get("/api/demo-token/validate", (req, res) => {
 });
 
 app.post("/api/analyze", async (req, res) => {
-  console.log("demo mode", DEMO_MODE);
   // For demo purposes
   if (DEMO_MODE === "true") {
     console.log("showing demo mode");

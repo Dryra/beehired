@@ -102,6 +102,25 @@ function App() {
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
+    const encodedJob = params.get("job");
+
+    if (!encodedJob) return;
+
+    try {
+      const parsed = JSON.parse(decodeURIComponent(encodedJob));
+
+      if (parsed.jobText) {
+        setJobDescription(parsed.jobText);
+      }
+
+      window.history.replaceState({}, document.title, "/");
+    } catch (error) {
+      console.error("Failed to parse job from URL", error);
+    }
+  }, []);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
     const token = params.get("token");
 
     if (!token) return;
@@ -259,6 +278,7 @@ function App() {
                 <h2>Your CV</h2>
                 <label className="uploadBox">
                   <input
+                    name="cvFile"
                     type="file"
                     accept="application/pdf"
                     onChange={handlePdfUpload}
@@ -269,6 +289,7 @@ function App() {
                     : "Upload CV PDF"}
                 </label>
                 <textarea
+                  name="cv"
                   placeholder="Paste your CV here..."
                   value={cvText || cv}
                   onChange={(e) => {
@@ -281,6 +302,7 @@ function App() {
               <div className="panel">
                 <h2>Job Description</h2>
                 <textarea
+                  name="jobDescription"
                   placeholder="Paste the job description here..."
                   value={jobDescription}
                   onChange={(e) => setJobDescription(e.target.value)}

@@ -38,14 +38,31 @@ const API_URL = import.meta.env.PROD
   : "http://localhost:3001";
 const LINKEDIN_URL = import.meta.env.VITE_LINKEDIN_URL;
 const CONTACT_EMAIL = import.meta.env.VITE_CONTACT_EMAIL;
+const SAVED_CV_STORAGE_KEY = "savedCv";
+
+function getInitialJobDescription() {
+  const params = new URLSearchParams(window.location.search);
+  const encodedJob = params.get("job");
+
+  if (!encodedJob) return "";
+
+  try {
+    const parsed = JSON.parse(decodeURIComponent(encodedJob));
+    return typeof parsed.jobText === "string" ? parsed.jobText : "";
+  } catch (error) {
+    console.error("Failed to parse job from URL", error);
+    return "";
+  }
+}
 
 function App() {
-  const [cv, setCv] = useState("");
-  const [jobDescription, setJobDescription] = useState("");
+  const [cv, setCv] = useState(
+    () => localStorage.getItem(SAVED_CV_STORAGE_KEY) || ""
+  );
+  const [jobDescription, setJobDescription] = useState(getInitialJobDescription);
   const [analysis, setAnalysis] = useState<Analysis | null>(null);
   const [loading, setLoading] = useState(false);
 
-  const [cvText, setCvText] = useState("");
   const [isParsingPdf, setIsParsingPdf] = useState(false);
 
   const [copied, setCopied] = useState(false);
@@ -71,6 +88,17 @@ function App() {
   function hideJobsList() {
     setShowJobs(false);
   }
+
+  const saveCv = (nextCv: string) => {
+    setCv(nextCv);
+
+    if (nextCv.trim()) {
+      localStorage.setItem(SAVED_CV_STORAGE_KEY, nextCv);
+      return;
+    }
+
+    localStorage.removeItem(SAVED_CV_STORAGE_KEY);
+  };
 
   const saveAnalysis = (analysis: Analysis) => {
     if (!analysis) return;
@@ -102,20 +130,8 @@ function App() {
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    const encodedJob = params.get("job");
-
-    if (!encodedJob) return;
-
-    try {
-      const parsed = JSON.parse(decodeURIComponent(encodedJob));
-
-      if (parsed.jobText) {
-        setJobDescription(parsed.jobText);
-      }
-
+    if (params.has("job")) {
       window.history.replaceState({}, document.title, "/");
-    } catch (error) {
-      console.error("Failed to parse job from URL", error);
     }
   }, []);
 
@@ -195,8 +211,7 @@ function App() {
         throw new Error(data.error || "Failed to parse PDF");
       }
 
-      setCvText(data.text);
-      setCv(data.text);
+      saveCv(data.text);
     } catch (error) {
       console.error(error);
       alert("Could not read PDF");
@@ -291,11 +306,8 @@ function App() {
                 <textarea
                   name="cv"
                   placeholder="Paste your CV here..."
-                  value={cvText || cv}
-                  onChange={(e) => {
-                    setCvText("");
-                    setCv(e.target.value);
-                  }}
+                  value={cv}
+                  onChange={(e) => saveCv(e.target.value)}
                 />
               </div>
 

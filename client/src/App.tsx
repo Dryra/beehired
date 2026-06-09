@@ -59,7 +59,9 @@ function App() {
   const [cv, setCv] = useState(
     () => localStorage.getItem(SAVED_CV_STORAGE_KEY) || ""
   );
-  const [jobDescription, setJobDescription] = useState(getInitialJobDescription);
+  const [jobDescription, setJobDescription] = useState(
+    getInitialJobDescription
+  );
   const [analysis, setAnalysis] = useState<Analysis | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -130,13 +132,6 @@ function App() {
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    if (params.has("job")) {
-      window.history.replaceState({}, document.title, "/");
-    }
-  }, []);
-
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
     const token = params.get("token");
 
     if (!token) return;
@@ -155,8 +150,6 @@ function App() {
         if (data.valid) {
           setDemoToken(candidateToken);
           setIsDemoTokenValid(true);
-          // clean up url
-          //window.history.replaceState({}, document.title, "/");
           return;
         }
       } catch (error) {

@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import "./App.scss";
 import { JobsList } from "./components/jobs";
 import HoneycombIcon from "./assets/icon-honeycomb.svg?react";
@@ -40,27 +40,42 @@ const LINKEDIN_URL = import.meta.env.VITE_LINKEDIN_URL;
 const CONTACT_EMAIL = import.meta.env.VITE_CONTACT_EMAIL;
 const SAVED_CV_STORAGE_KEY = "savedCv";
 
-function getInitialJobDescription() {
+function getInitialJobData() {
   const params = new URLSearchParams(window.location.search);
   const encodedJob = params.get("job");
 
-  if (!encodedJob) return "";
+  if (!encodedJob) {
+    return {
+      jobDescription: "",
+      hasEncodedJob: false,
+    };
+  }
 
   try {
     const parsed = JSON.parse(decodeURIComponent(encodedJob));
-    return typeof parsed.jobText === "string" ? parsed.jobText : "";
+    const jobDescription =
+      typeof parsed.jobText === "string" ? parsed.jobText : "";
+
+    return {
+      jobDescription,
+      hasEncodedJob: jobDescription.trim().length > 0,
+    };
   } catch (error) {
     console.error("Failed to parse job from URL", error);
-    return "";
+    return {
+      jobDescription: "",
+      hasEncodedJob: false,
+    };
   }
 }
 
 function App() {
+  const [initialJobData] = useState(getInitialJobData);
   const [cv, setCv] = useState(
     () => localStorage.getItem(SAVED_CV_STORAGE_KEY) || ""
   );
   const [jobDescription, setJobDescription] = useState(
-    getInitialJobDescription
+    () => initialJobData.jobDescription
   );
   const [analysis, setAnalysis] = useState<Analysis | null>(null);
   const [loading, setLoading] = useState(false);
@@ -82,6 +97,8 @@ function App() {
   const [showDemoModal, setShowDemoModal] = useState(false);
   const [showDemoBanner, setShowDemoBanner] = useState(true);
   const [emailCopied, setEmailCopied] = useState(false);
+
+  const hasAutoAnalyzedRef = useRef(false);
 
   function showJobsList() {
     setShowJobs(true);
@@ -129,6 +146,39 @@ function App() {
 
     setTimeout(() => setEmailCopied(false), 1600);
   }
+
+  const analyze = useCallback(async () => {
+    setLoading(true);
+    setAnalysis(null);
+
+    const res = await fetch(`${API_URL}/api/analyze`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...(isDemoTokenValid && demoToken ? { "x-demo-token": demoToken } : {}),
+      },
+      body: JSON.stringify({ cv, jobDescription }),
+    });
+
+    const data = await res.json();
+    setAnalysis(data);
+    setLoading(false);
+  }, [cv, demoToken, isDemoTokenValid, jobDescription]);
+
+  useEffect(() => {
+    if (hasAutoAnalyzedRef.current) return;
+    if (!initialJobData.hasEncodedJob) return;
+    if (!jobDescription.trim()) return;
+    if (!cv.trim()) return;
+    if (!isDemoTokenValid || !demoToken) return;
+
+    hasAutoAnalyzedRef.current = true;
+    const timeoutId = window.setTimeout(() => {
+      analyze();
+    }, 0);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [analyze, initialJobData.hasEncodedJob, jobDescription, cv, isDemoTokenValid, demoToken]);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -211,24 +261,6 @@ function App() {
     } finally {
       setIsParsingPdf(false);
     }
-  }
-
-  async function analyze() {
-    setLoading(true);
-    setAnalysis(null);
-
-    const res = await fetch(`${API_URL}/api/analyze`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        ...(isDemoTokenValid && demoToken ? { "x-demo-token": demoToken } : {}),
-      },
-      body: JSON.stringify({ cv, jobDescription }),
-    });
-
-    const data = await res.json();
-    setAnalysis(data);
-    setLoading(false);
   }
 
   async function copyApplicationMessage() {

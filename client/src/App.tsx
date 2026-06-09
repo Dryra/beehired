@@ -40,14 +40,16 @@ const LINKEDIN_URL = import.meta.env.VITE_LINKEDIN_URL;
 const CONTACT_EMAIL = import.meta.env.VITE_CONTACT_EMAIL;
 const SAVED_CV_STORAGE_KEY = "savedCv";
 
-function getInitialJobData() {
+function getUrlData() {
   const params = new URLSearchParams(window.location.search);
   const encodedJob = params.get("job");
+  const token = params.get("token");
 
   if (!encodedJob) {
     return {
       jobDescription: "",
       hasEncodedJob: false,
+      token,
     };
   }
 
@@ -59,23 +61,25 @@ function getInitialJobData() {
     return {
       jobDescription,
       hasEncodedJob: jobDescription.trim().length > 0,
+      token,
     };
   } catch (error) {
     console.error("Failed to parse job from URL", error);
     return {
       jobDescription: "",
       hasEncodedJob: false,
+      token,
     };
   }
 }
 
 function App() {
-  const [initialJobData] = useState(getInitialJobData);
+  const [urlData, setUrlData] = useState(getUrlData);
   const [cv, setCv] = useState(
     () => localStorage.getItem(SAVED_CV_STORAGE_KEY) || ""
   );
   const [jobDescription, setJobDescription] = useState(
-    () => initialJobData.jobDescription
+    () => urlData.jobDescription
   );
   const [analysis, setAnalysis] = useState<Analysis | null>(null);
   const [loading, setLoading] = useState(false);
@@ -99,6 +103,7 @@ function App() {
   const [emailCopied, setEmailCopied] = useState(false);
 
   const hasAutoAnalyzedRef = useRef(false);
+  const lastAutoAnalyzedJobRef = useRef("");
 
   function showJobsList() {
     setShowJobs(true);
@@ -166,26 +171,72 @@ function App() {
   }, [cv, demoToken, isDemoTokenValid, jobDescription]);
 
   useEffect(() => {
-    if (hasAutoAnalyzedRef.current) return;
-    if (!initialJobData.hasEncodedJob) return;
+    if (!urlData.hasEncodedJob) return;
     if (!jobDescription.trim()) return;
     if (!cv.trim()) return;
     if (!isDemoTokenValid || !demoToken) return;
+    if (
+      hasAutoAnalyzedRef.current &&
+      lastAutoAnalyzedJobRef.current === jobDescription
+    ) {
+      return;
+    }
 
     hasAutoAnalyzedRef.current = true;
+    lastAutoAnalyzedJobRef.current = jobDescription;
+
     const timeoutId = window.setTimeout(() => {
       analyze();
     }, 0);
 
     return () => window.clearTimeout(timeoutId);
-  }, [analyze, initialJobData.hasEncodedJob, jobDescription, cv, isDemoTokenValid, demoToken]);
+  }, [
+    analyze,
+    urlData.hasEncodedJob,
+    jobDescription,
+    cv,
+    isDemoTokenValid,
+    demoToken,
+  ]);
 
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const token = params.get("token");
+    function syncUrlData() {
+      const nextUrlData = getUrlData();
+      setUrlData(nextUrlData);
 
-    if (!token) return;
-    const candidateToken = token;
+      if (nextUrlData.hasEncodedJob) {
+        setJobDescription(nextUrlData.jobDescription);
+        hasAutoAnalyzedRef.current = false;
+      }
+    }
+
+    const originalPushState = window.history.pushState;
+    const originalReplaceState = window.history.replaceState;
+
+    window.history.pushState = function (...args) {
+      originalPushState.apply(window.history, args);
+      syncUrlData();
+    };
+
+    window.history.replaceState = function (...args) {
+      originalReplaceState.apply(window.history, args);
+      syncUrlData();
+    };
+
+    window.addEventListener("popstate", syncUrlData);
+    window.addEventListener("pageshow", syncUrlData);
+
+    return () => {
+      window.history.pushState = originalPushState;
+      window.history.replaceState = originalReplaceState;
+      window.removeEventListener("popstate", syncUrlData);
+      window.removeEventListener("pageshow", syncUrlData);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!urlData.token) return;
+    const candidateToken = urlData.token;
 
     async function validateDemoToken() {
       try {
@@ -211,7 +262,7 @@ function App() {
     }
 
     validateDemoToken();
-  }, []);
+  }, [urlData.token]);
 
   useEffect(() => {
     if (!analysis) return;

@@ -26,6 +26,14 @@ type Analysis = {
   notInterestedMessage: string;
 };
 
+type ExtensionJobPayload = {
+  type: "BEEHIRED_ANALYZE_JOB";
+  source: "linkedin-extension";
+  jobTitle: string;
+  companyName: string;
+  jobText: string;
+};
+
 // Add near your other types
 export type SavedAnalysis = Analysis & {
   id: string;
@@ -40,46 +48,35 @@ const LINKEDIN_URL = import.meta.env.VITE_LINKEDIN_URL;
 const CONTACT_EMAIL = import.meta.env.VITE_CONTACT_EMAIL;
 const SAVED_CV_STORAGE_KEY = "savedCv";
 
-function getUrlData() {
+function getDemoTokenFromUrl() {
   const params = new URLSearchParams(window.location.search);
-  const encodedJob = params.get("job");
-  const token = params.get("token");
+  return params.get("token");
+}
 
-  if (!encodedJob) {
-    return {
-      jobDescription: "",
-      hasEncodedJob: false,
-      token,
-    };
-  }
+function isExtensionJobPayload(data: unknown): data is ExtensionJobPayload {
+  if (!data || typeof data !== "object") return false;
 
-  try {
-    const parsed = JSON.parse(decodeURIComponent(encodedJob));
-    const jobDescription =
-      typeof parsed.jobText === "string" ? parsed.jobText : "";
+  const payload = data as Record<string, unknown>;
 
-    return {
-      jobDescription,
-      hasEncodedJob: jobDescription.trim().length > 0,
-      token,
-    };
-  } catch (error) {
-    console.error("Failed to parse job from URL", error);
-    return {
-      jobDescription: "",
-      hasEncodedJob: false,
-      token,
-    };
-  }
+  return (
+    payload.type === "BEEHIRED_ANALYZE_JOB" &&
+    payload.source === "linkedin-extension" &&
+    typeof payload.jobTitle === "string" &&
+    typeof payload.companyName === "string" &&
+    typeof payload.jobText === "string" &&
+    payload.jobTitle.trim().length > 0 &&
+    payload.companyName.trim().length > 0 &&
+    payload.jobText.trim().length > 0
+  );
 }
 
 function App() {
-  const [urlData, setUrlData] = useState(getUrlData);
   const [cv, setCv] = useState(
     () => localStorage.getItem(SAVED_CV_STORAGE_KEY) || ""
   );
-  const [jobDescription, setJobDescription] = useState(
-    () => urlData.jobDescription
+  const [jobDescription, setJobDescription] = useState("");
+  const [extensionJob, setExtensionJob] = useState<ExtensionJobPayload | null>(
+    null
   );
   const [analysis, setAnalysis] = useState<Analysis | null>(null);
   const [loading, setLoading] = useState(false);
@@ -95,15 +92,17 @@ function App() {
 
   const [showJobs, setShowJobs] = useState(false);
 
-  const [demoToken, setDemoToken] = useState<string | null>(null);
+  const [demoToken, setDemoToken] = useState<string | null>(
+    getDemoTokenFromUrl
+  );
   const [isDemoTokenValid, setIsDemoTokenValid] = useState(false);
 
   const [showDemoModal, setShowDemoModal] = useState(false);
   const [showDemoBanner, setShowDemoBanner] = useState(true);
   const [emailCopied, setEmailCopied] = useState(false);
 
-  const hasAutoAnalyzedRef = useRef(false);
-  const lastAutoAnalyzedJobRef = useRef("");
+  const receivedExtensionJobsRef = useRef(new Set<string>());
+  const submittedExtensionJobRef = useRef<string | null>(null);
 
   function showJobsList() {
     setShowJobs(true);
@@ -152,7 +151,7 @@ function App() {
     setTimeout(() => setEmailCopied(false), 1600);
   }
 
-  const analyze = useCallback(async () => {
+  const analyzeJob = useCallback(async (jobText: string) => {
     setLoading(true);
     setAnalysis(null);
 
@@ -162,81 +161,53 @@ function App() {
         "Content-Type": "application/json",
         ...(isDemoTokenValid && demoToken ? { "x-demo-token": demoToken } : {}),
       },
-      body: JSON.stringify({ cv, jobDescription }),
+      body: JSON.stringify({ cv, jobDescription: jobText }),
     });
 
     const data = await res.json();
     setAnalysis(data);
     setLoading(false);
-  }, [cv, demoToken, isDemoTokenValid, jobDescription]);
+  }, [cv, demoToken, isDemoTokenValid]);
+
+  const analyze = useCallback(() => {
+    void analyzeJob(jobDescription);
+  }, [analyzeJob, jobDescription]);
 
   useEffect(() => {
-    if (!urlData.hasEncodedJob) return;
-    if (!jobDescription.trim()) return;
+    if (!extensionJob) return;
     if (!cv.trim()) return;
-    if (!isDemoTokenValid || !demoToken) return;
-    if (
-      hasAutoAnalyzedRef.current &&
-      lastAutoAnalyzedJobRef.current === jobDescription
-    ) {
-      return;
-    }
+    if (loading) return;
 
-    hasAutoAnalyzedRef.current = true;
-    lastAutoAnalyzedJobRef.current = jobDescription;
-
-    const timeoutId = window.setTimeout(() => {
-      analyze();
-    }, 0);
-
-    return () => window.clearTimeout(timeoutId);
-  }, [
-    analyze,
-    urlData.hasEncodedJob,
-    jobDescription,
-    cv,
-    isDemoTokenValid,
-    demoToken,
-  ]);
+    const extensionJobKey = JSON.stringify(extensionJob);
+    if (submittedExtensionJobRef.current === extensionJobKey) return;
+    submittedExtensionJobRef.current = extensionJobKey;
+    void analyzeJob(extensionJob.jobText);
+  }, [analyzeJob, cv, extensionJob, loading]);
 
   useEffect(() => {
-    function syncUrlData() {
-      const nextUrlData = getUrlData();
-      setUrlData(nextUrlData);
+    function receiveExtensionJob(event: MessageEvent<unknown>) {
+      if (event.origin !== window.location.origin) return;
+      if (!isExtensionJobPayload(event.data)) return;
 
-      if (nextUrlData.hasEncodedJob) {
-        setJobDescription(nextUrlData.jobDescription);
-        hasAutoAnalyzedRef.current = false;
-      }
+      const extensionJobKey = JSON.stringify(event.data);
+      if (receivedExtensionJobsRef.current.has(extensionJobKey)) return;
+
+      receivedExtensionJobsRef.current.add(extensionJobKey);
+      setJobDescription(event.data.jobText);
+      setExtensionJob(event.data);
     }
 
-    const originalPushState = window.history.pushState;
-    const originalReplaceState = window.history.replaceState;
-
-    window.history.pushState = function (...args) {
-      originalPushState.apply(window.history, args);
-      syncUrlData();
-    };
-
-    window.history.replaceState = function (...args) {
-      originalReplaceState.apply(window.history, args);
-      syncUrlData();
-    };
-
-    window.addEventListener("popstate", syncUrlData);
-    window.addEventListener("pageshow", syncUrlData);
+    if (showJobs) return;
+    window.addEventListener("message", receiveExtensionJob);
 
     return () => {
-      window.history.pushState = originalPushState;
-      window.history.replaceState = originalReplaceState;
-      window.removeEventListener("popstate", syncUrlData);
-      window.removeEventListener("pageshow", syncUrlData);
+      window.removeEventListener("message", receiveExtensionJob);
     };
-  }, []);
+  }, [showJobs]);
 
   useEffect(() => {
-    if (!urlData.token) return;
-    const candidateToken = urlData.token;
+    if (!demoToken) return;
+    const candidateToken = demoToken;
 
     async function validateDemoToken() {
       try {
@@ -262,7 +233,7 @@ function App() {
     }
 
     validateDemoToken();
-  }, [urlData.token]);
+  }, [demoToken]);
 
   useEffect(() => {
     if (!analysis) return;

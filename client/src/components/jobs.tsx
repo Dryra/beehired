@@ -26,6 +26,18 @@ function getJobLinkHref(value: string) {
   return /^https?:\/\//i.test(value) ? value : `https://${value}`;
 }
 
+function formatAppliedDate(value: string | undefined) {
+  if (!value) return "—";
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "—";
+
+  return new Intl.DateTimeFormat(undefined, {
+    dateStyle: "medium",
+    timeStyle: "short",
+  }).format(date);
+}
+
 // Create a JobsList component/page
 export function JobsList({ onBack }: JobsListProps) {
   const [openJobId, setOpenJobId] = useState<string | null>(null);
@@ -33,12 +45,29 @@ export function JobsList({ onBack }: JobsListProps) {
   const [editingLinkJobId, setEditingLinkJobId] = useState<string | null>(null);
   const [linkDrafts, setLinkDrafts] = useState<Record<string, string>>({});
 
-  const [jobs, setJobs] = useState<SavedAnalysis[]>(() =>
-    JSON.parse(localStorage.getItem("savedAnalyses") || "[]").sort(
+  const [jobs, setJobs] = useState<SavedAnalysis[]>(() => {
+    const savedJobs: SavedAnalysis[] = JSON.parse(
+      localStorage.getItem("savedAnalyses") || "[]"
+    );
+    const migrationDate = new Date().toISOString();
+    let didAddAppliedDate = false;
+
+    const migratedJobs = savedJobs.map((job) => {
+      if (job.applicationStatus !== "applied" || job.appliedAt) return job;
+
+      didAddAppliedDate = true;
+      return { ...job, appliedAt: migrationDate };
+    });
+
+    if (didAddAppliedDate) {
+      localStorage.setItem("savedAnalyses", JSON.stringify(migratedJobs));
+    }
+
+    return migratedJobs.sort(
       (a: SavedAnalysis, b: SavedAnalysis) =>
         getScore(b.matchScore) - getScore(a.matchScore)
-    )
-  );
+    );
+  });
 
   function toggleLikedJob(jobId: string) {
     const updatedJobs = jobs.map((job) =>
@@ -53,7 +82,7 @@ export function JobsList({ onBack }: JobsListProps) {
     jobId: string,
     changes: Pick<
       SavedAnalysis,
-      "applicationStatus" | "workLocation"
+      "applicationStatus" | "workLocation" | "appliedAt"
     >
   ) {
     const updatedJobs = jobs.map((job) =>
@@ -220,6 +249,7 @@ export function JobsList({ onBack }: JobsListProps) {
                     <th>Job link</th>
                     <th>Work setup</th>
                     <th>Status</th>
+                    <th>Applied date</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -303,10 +333,19 @@ export function JobsList({ onBack }: JobsListProps) {
                         <select
                           value={job.applicationStatus ?? ""}
                           onChange={(event) =>
-                            updateApplication(job.id, {
-                              applicationStatus: event.target.value as ApplicationStatus,
-                              workLocation: job.workLocation,
-                            })
+                            updateApplication(job.id, (() => {
+                              const applicationStatus = event.target
+                                .value as ApplicationStatus;
+
+                              return {
+                                applicationStatus,
+                                workLocation: job.workLocation,
+                                appliedAt:
+                                  applicationStatus === "applied"
+                                    ? new Date().toISOString()
+                                    : job.appliedAt,
+                              };
+                            })())
                           }
                           aria-label={`Application status for ${getText(job.jobName)}`}
                         >
@@ -316,6 +355,15 @@ export function JobsList({ onBack }: JobsListProps) {
                           <option value="rejected">Rejected</option>
                           <option value="offer">Offer</option>
                         </select>
+                      </td>
+                      <td data-label="Applied date">
+                        {job.appliedAt ? (
+                          <time dateTime={job.appliedAt}>
+                            {formatAppliedDate(job.appliedAt)}
+                          </time>
+                        ) : (
+                          "—"
+                        )}
                       </td>
                     </tr>
                   ))}

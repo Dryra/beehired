@@ -36,6 +36,7 @@ export type SavedAnalysis = Analysis & {
   applicationStatus?: "applied" | "in-progress" | "rejected" | "offer";
   jobLink?: string;
   workLocation?: "remote" | "hybrid" | "on-location";
+  appliedAt?: string;
 };
 
 const API_URL = import.meta.env.PROD

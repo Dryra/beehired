@@ -3,6 +3,8 @@ import "./App.scss";
 import { JobsList } from "./components/jobs";
 import HoneycombIcon from "./assets/icon-honeycomb.svg?react";
 import { getScoreClass, getScoreLabel } from "./utils/scoreUtils";
+import { subscribeToExtensionJobs } from "./rootExtensionBridge";
+import type { ExtensionJob } from "./extensionMessageBridge";
 
 type responseStratType = {
   type: "apply" | "decline" | "explore";
@@ -24,14 +26,6 @@ type Analysis = {
   estimatedSalary: string;
   responseStrategy: responseStratType;
   notInterestedMessage: string;
-};
-
-type ExtensionJobPayload = {
-  type: "BEEHIRED_ANALYZE_JOB";
-  source: "linkedin-extension";
-  jobTitle: string;
-  companyName: string;
-  jobText: string;
 };
 
 // Add near your other types
@@ -56,29 +50,12 @@ function getDemoTokenFromUrl() {
   return params.get("token");
 }
 
-function isExtensionJobPayload(data: unknown): data is ExtensionJobPayload {
-  if (!data || typeof data !== "object") return false;
-
-  const payload = data as Record<string, unknown>;
-
-  return (
-    payload.type === "BEEHIRED_ANALYZE_JOB" &&
-    payload.source === "linkedin-extension" &&
-    typeof payload.jobTitle === "string" &&
-    typeof payload.companyName === "string" &&
-    typeof payload.jobText === "string" &&
-    payload.jobTitle.trim().length > 0 &&
-    payload.companyName.trim().length > 0 &&
-    payload.jobText.trim().length > 0
-  );
-}
-
 function App() {
   const [cv, setCv] = useState(
     () => localStorage.getItem(SAVED_CV_STORAGE_KEY) || ""
   );
   const [jobDescription, setJobDescription] = useState("");
-  const [extensionJob, setExtensionJob] = useState<ExtensionJobPayload | null>(
+  const [extensionJob, setExtensionJob] = useState<ExtensionJob | null>(
     null
   );
   const [analysis, setAnalysis] = useState<Analysis | null>(null);
@@ -104,8 +81,7 @@ function App() {
   const [showDemoBanner, setShowDemoBanner] = useState(true);
   const [emailCopied, setEmailCopied] = useState(false);
 
-  const receivedExtensionJobsRef = useRef(new Set<string>());
-  const submittedExtensionJobRef = useRef<string | null>(null);
+  const submittedExtensionJobsRef = useRef(new Set<string>());
 
   function showJobsList() {
     setShowJobs(true);
@@ -182,31 +158,27 @@ function App() {
     if (loading) return;
 
     const extensionJobKey = JSON.stringify(extensionJob);
-    if (submittedExtensionJobRef.current === extensionJobKey) return;
-    submittedExtensionJobRef.current = extensionJobKey;
+    if (submittedExtensionJobsRef.current.has(extensionJobKey)) return;
+    submittedExtensionJobsRef.current.add(extensionJobKey);
+    if (import.meta.env.DEV) {
+      console.debug("[BeeHired extension] Starting analysis", {
+        companyName: extensionJob.companyName,
+        jobTitle: extensionJob.jobTitle,
+      });
+    }
     void analyzeJob(extensionJob.jobText);
   }, [analyzeJob, cv, extensionJob, loading]);
 
   useEffect(() => {
-    function receiveExtensionJob(event: MessageEvent<unknown>) {
-      if (event.origin !== window.location.origin) return;
-      if (!isExtensionJobPayload(event.data)) return;
-
-      const extensionJobKey = JSON.stringify(event.data);
-      if (receivedExtensionJobsRef.current.has(extensionJobKey)) return;
-
-      receivedExtensionJobsRef.current.add(extensionJobKey);
-      setJobDescription(event.data.jobText);
-      setExtensionJob(event.data);
-    }
-
-    if (showJobs) return;
-    window.addEventListener("message", receiveExtensionJob);
-
-    return () => {
-      window.removeEventListener("message", receiveExtensionJob);
-    };
-  }, [showJobs]);
+    return subscribeToExtensionJobs((job) => {
+      if (import.meta.env.DEV) {
+        console.debug("[BeeHired extension] Populating job description");
+      }
+      setShowJobs(false);
+      setJobDescription(job.jobText);
+      setExtensionJob(job);
+    });
+  }, []);
 
   useEffect(() => {
     if (!demoToken) return;

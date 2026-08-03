@@ -39,6 +39,9 @@ export type SavedAnalysis = Analysis & {
   id: string;
   savedAt: string;
   liked: boolean;
+  applicationStatus?: "applied" | "in-progress" | "rejected" | "offer";
+  applicationNote?: string;
+  jobLink?: string;
 };
 
 const API_URL = import.meta.env.PROD

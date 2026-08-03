@@ -51,7 +51,10 @@ export function JobsList({ onBack }: JobsListProps) {
 
   function updateApplication(
     jobId: string,
-    changes: Pick<SavedAnalysis, "applicationStatus" | "applicationNote">
+    changes: Pick<
+      SavedAnalysis,
+      "applicationStatus" | "workLocation"
+    >
   ) {
     const updatedJobs = jobs.map((job) =>
       job.id === jobId ? { ...job, ...changes } : job
@@ -215,8 +218,8 @@ export function JobsList({ onBack }: JobsListProps) {
                     <th>Company</th>
                     <th>Job</th>
                     <th>Job link</th>
+                    <th>Work setup</th>
                     <th>Status</th>
-                    <th>Note</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -277,13 +280,32 @@ export function JobsList({ onBack }: JobsListProps) {
                           </div>
                         )}
                       </td>
+                      <td data-label="Work setup">
+                        <select
+                          value={job.workLocation ?? ""}
+                          onChange={(event) =>
+                            updateApplication(job.id, {
+                              applicationStatus: job.applicationStatus,
+                              workLocation: event.target.value as NonNullable<
+                                SavedAnalysis["workLocation"]
+                              >,
+                            })
+                          }
+                          aria-label={`Work setup for ${getText(job.jobName)}`}
+                        >
+                          <option value="" disabled>Select setup</option>
+                          <option value="remote">Remote</option>
+                          <option value="hybrid">Hybrid</option>
+                          <option value="on-location">On-location</option>
+                        </select>
+                      </td>
                       <td data-label="Status">
                         <select
                           value={job.applicationStatus ?? ""}
                           onChange={(event) =>
                             updateApplication(job.id, {
                               applicationStatus: event.target.value as ApplicationStatus,
-                              applicationNote: job.applicationNote,
+                              workLocation: job.workLocation,
                             })
                           }
                           aria-label={`Application status for ${getText(job.jobName)}`}
@@ -294,20 +316,6 @@ export function JobsList({ onBack }: JobsListProps) {
                           <option value="rejected">Rejected</option>
                           <option value="offer">Offer</option>
                         </select>
-                      </td>
-                      <td data-label="Note">
-                        <input
-                          type="text"
-                          value={job.applicationNote ?? ""}
-                          onChange={(event) =>
-                            updateApplication(job.id, {
-                              applicationStatus: job.applicationStatus,
-                              applicationNote: event.target.value,
-                            })
-                          }
-                          placeholder="Optional note"
-                          aria-label={`Note for ${getText(job.jobName)}`}
-                        />
                       </td>
                     </tr>
                   ))}

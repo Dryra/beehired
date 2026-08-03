@@ -40,8 +40,8 @@ export type SavedAnalysis = Analysis & {
   savedAt: string;
   liked: boolean;
   applicationStatus?: "applied" | "in-progress" | "rejected" | "offer";
-  applicationNote?: string;
   jobLink?: string;
+  workLocation?: "remote" | "hybrid" | "on-location";
 };
 
 const API_URL = import.meta.env.PROD

@@ -76,15 +76,28 @@ export function JobsList({ onBack }: JobsListProps) {
     );
   });
 
-  const trackerJobs = [...jobs].sort(
-    (a, b) =>
+  const trackerJobs = [...jobs].sort((a, b) => {
+    const statusDifference =
       (a.applicationStatus
         ? STATUS_SORT_ORDER[a.applicationStatus]
         : Number.MAX_SAFE_INTEGER) -
       (b.applicationStatus
         ? STATUS_SORT_ORDER[b.applicationStatus]
-        : Number.MAX_SAFE_INTEGER)
-  );
+        : Number.MAX_SAFE_INTEGER);
+
+    if (statusDifference !== 0) return statusDifference;
+
+    if (
+      a.applicationStatus === "applied" &&
+      b.applicationStatus === "applied"
+    ) {
+      const aAppliedAt = a.appliedAt ? new Date(a.appliedAt).getTime() : 0;
+      const bAppliedAt = b.appliedAt ? new Date(b.appliedAt).getTime() : 0;
+      return bAppliedAt - aAppliedAt;
+    }
+
+    return 0;
+  });
 
   function toggleLikedJob(jobId: string) {
     const updatedJobs = jobs.map((job) =>

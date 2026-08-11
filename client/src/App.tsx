@@ -33,7 +33,12 @@ export type SavedAnalysis = Analysis & {
   id: string;
   savedAt: string;
   liked: boolean;
-  applicationStatus?: "applied" | "in-progress" | "rejected" | "offer";
+  applicationStatus?:
+    | "applied"
+    | "in-progress"
+    | "rejected"
+    | "not-applying"
+    | "offer";
   jobLink?: string;
   workLocation?: "remote" | "hybrid" | "on-location";
   appliedAt?: string;

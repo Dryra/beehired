@@ -10,6 +10,14 @@ const EMPTY_TEXT = "Not available";
 type JobsView = "details" | "tracker";
 type ApplicationStatus = NonNullable<SavedAnalysis["applicationStatus"]>;
 
+const STATUS_SORT_ORDER: Record<ApplicationStatus, number> = {
+  offer: 0,
+  "in-progress": 1,
+  applied: 2,
+  rejected: 3,
+  "not-applying": 4,
+};
+
 function getText(value: string | null | undefined) {
   return value ?? EMPTY_TEXT;
 }
@@ -67,6 +75,16 @@ export function JobsList({ onBack }: JobsListProps) {
         getScore(b.matchScore) - getScore(a.matchScore)
     );
   });
+
+  const trackerJobs = [...jobs].sort(
+    (a, b) =>
+      (a.applicationStatus
+        ? STATUS_SORT_ORDER[a.applicationStatus]
+        : Number.MAX_SAFE_INTEGER) -
+      (b.applicationStatus
+        ? STATUS_SORT_ORDER[b.applicationStatus]
+        : Number.MAX_SAFE_INTEGER)
+  );
 
   function toggleLikedJob(jobId: string) {
     const updatedJobs = jobs.map((job) =>
@@ -252,7 +270,7 @@ export function JobsList({ onBack }: JobsListProps) {
                   </tr>
                 </thead>
                 <tbody>
-                  {jobs.map((job) => (
+                  {trackerJobs.map((job) => (
                     <tr
                       key={job.id}
                       className={
@@ -380,6 +398,7 @@ export function JobsList({ onBack }: JobsListProps) {
                           <option value="applied">Applied</option>
                           <option value="in-progress">In progress</option>
                           <option value="rejected">Rejected</option>
+                          <option value="not-applying">Not applying</option>
                           <option value="offer">Offer</option>
                         </select>
                       </td>

@@ -301,7 +301,11 @@
       }
 
       &.status-rejected {
-        background: rgba(239, 68, 68, 0.12);
+        background: rgba(185, 28, 28, 0.22);
+      }
+
+      &.status-not-applying {
+        background: rgba(239, 68, 68, 0.09);
       }
 
       &.status-offer {

@@ -34,7 +34,6 @@ function formatAppliedDate(value: string | undefined) {
 
   return new Intl.DateTimeFormat(undefined, {
     dateStyle: "medium",
-    timeStyle: "short",
   }).format(date);
 }
 
@@ -246,10 +245,10 @@ export function JobsList({ onBack }: JobsListProps) {
                   <tr>
                     <th>Company</th>
                     <th>Job</th>
-                    <th>Job link</th>
-                    <th>Work setup</th>
+                    <th>Link</th>
+                    <th>Setup</th>
                     <th>Status</th>
-                    <th>Applied date</th>
+                    <th>Applied</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -262,10 +261,18 @@ export function JobsList({ onBack }: JobsListProps) {
                           : undefined
                       }
                     >
-                      <td data-label="Company">{getText(job.companyName)}</td>
-                      <td data-label="Job">{getText(job.jobName)}</td>
+                      <td data-label="Company">
+                        <span className="trackerCellText" title={getText(job.companyName)}>
+                          {getText(job.companyName)}
+                        </span>
+                      </td>
+                      <td data-label="Job">
+                        <span className="trackerCellText" title={getText(job.jobName)}>
+                          {getText(job.jobName)}
+                        </span>
+                      </td>
                       <td data-label="Job link">
-                        {editingLinkJobId === job.id || !job.jobLink ? (
+                        {editingLinkJobId === job.id ? (
                           <div className="linkEditor">
                             <input
                               type="url"
@@ -279,35 +286,55 @@ export function JobsList({ onBack }: JobsListProps) {
                               onKeyDown={(event) => {
                                 if (event.key === "Enter") saveJobLink(job);
                               }}
-                              placeholder="https://example.com/job"
+                              placeholder="Paste URL"
                               aria-label={`Job link for ${getText(job.jobName)}`}
                             />
-                            <button type="button" onClick={() => saveJobLink(job)}>
-                              Save
+                            <button
+                              type="button"
+                              onClick={() => saveJobLink(job)}
+                              aria-label="Save job link"
+                              title="Save"
+                            >
+                              ✓
                             </button>
-                            {job.jobLink && (
-                              <button
-                                type="button"
-                                className="secondaryLinkAction"
-                                onClick={() => setEditingLinkJobId(null)}
-                              >
-                                Cancel
-                              </button>
-                            )}
+                            <button
+                              type="button"
+                              className="secondaryLinkAction"
+                              onClick={() => setEditingLinkJobId(null)}
+                              aria-label="Cancel editing job link"
+                              title="Cancel"
+                            >
+                              ×
+                            </button>
                           </div>
-                        ) : (
+                        ) : job.jobLink ? (
                           <div className="savedJobLink">
                             <a
                               href={getJobLinkHref(job.jobLink)}
                               target="_blank"
                               rel="noreferrer"
+                              aria-label={`Open job listing for ${getText(job.jobName)}`}
+                              title="Open job listing"
                             >
-                              Open job
+                              ↗
                             </a>
-                            <button type="button" onClick={() => startEditingLink(job)}>
-                              Edit
+                            <button
+                              type="button"
+                              onClick={() => startEditingLink(job)}
+                              aria-label="Edit job link"
+                              title="Edit link"
+                            >
+                              ✎
                             </button>
                           </div>
+                        ) : (
+                          <button
+                            type="button"
+                            className="addJobLink"
+                            onClick={() => startEditingLink(job)}
+                          >
+                            + Link
+                          </button>
                         )}
                       </td>
                       <td data-label="Work setup">
@@ -356,9 +383,12 @@ export function JobsList({ onBack }: JobsListProps) {
                           <option value="offer">Offer</option>
                         </select>
                       </td>
-                      <td data-label="Applied date">
+                      <td data-label="Applied">
                         {job.appliedAt ? (
-                          <time dateTime={job.appliedAt}>
+                          <time
+                            dateTime={job.appliedAt}
+                            title={new Date(job.appliedAt).toLocaleString()}
+                          >
                             {formatAppliedDate(job.appliedAt)}
                           </time>
                         ) : (

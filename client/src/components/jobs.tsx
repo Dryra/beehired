@@ -280,6 +280,7 @@ export function JobsList({ onBack }: JobsListProps) {
                     <th>Setup</th>
                     <th>Status</th>
                     <th>Applied</th>
+                    <th>Practice</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -426,6 +427,19 @@ export function JobsList({ onBack }: JobsListProps) {
                         ) : (
                           "—"
                         )}
+                      </td>
+                      <td data-label="Practice">
+                        {job.applicationStatus === "in-progress" ? (
+                          <a className="interviewLaunch" href={`#/interview/${job.id}`}
+                            aria-label={`Practice interview for ${getText(job.jobName)}`}
+                            title="Open interview companion">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="true">
+                              <path d="M12 3v3M9 3h6M5 8h14a2 2 0 0 1 2 2v9H3v-9a2 2 0 0 1 2-2ZM7 19v2m10-2v2M1 12v4m22-4v4M8 15h8" />
+                              <circle cx="8" cy="11" r=".8" /><circle cx="16" cy="11" r=".8" />
+                            </svg>
+                            <span>Practice</span>
+                          </a>
+                        ) : "—"}
                       </td>
                     </tr>
                   ))}

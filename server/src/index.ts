@@ -4,6 +4,9 @@ import dotenv from "dotenv";
 import OpenAI from "openai";
 import cvRoutes from "./routes/cvRoutes";
 import { getRandomJob } from "./utils/testDataUtils";
+import { zodTextFormat } from "openai/helpers/zod";
+import { createInterviewRouter } from "./routes/interviewRoutes";
+import { interviewInstructions, interviewOutputSchema } from "./interview";
 
 dotenv.config();
 
@@ -30,8 +33,31 @@ function isValidDemoToken(token: string | string[] | undefined) {
 app.get("/api/demo-token/validate", (req, res) => {
   const token = req.headers["x-demo-token"];
 
-  res.json({ valid: isValidDemoToken(token) });
+  res.json({ valid: DEMO_MODE !== "true" && isValidDemoToken(token) });
 });
+
+app.use(
+  "/api",
+  createInterviewRouter({
+    canUseAI: (token) => DEMO_MODE !== "true" && isValidDemoToken(token),
+    generate: async (request) => {
+      const response = await openai.responses.parse(
+        {
+          model: process.env.INTERVIEW_MODEL || "gpt-5.5",
+          instructions: interviewInstructions(request),
+          input: [{ role: "user", content: JSON.stringify(request) }],
+          text: {
+            format: zodTextFormat(interviewOutputSchema, "interview_turn"),
+          },
+          max_output_tokens: 6000,
+          store: false,
+        },
+        { timeout: 90000, maxRetries: 0 }
+      );
+      return response.output_parsed;
+    },
+  })
+);
 
 app.post("/api/analyze", async (req, res) => {
   // For demo purposes

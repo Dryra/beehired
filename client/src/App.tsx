@@ -1,10 +1,18 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import {
+  useState,
+  useEffect,
+  useRef,
+  useCallback,
+  useSyncExternalStore,
+} from "react";
 import "./App.scss";
 import { JobsList } from "./components/jobs";
 import HoneycombIcon from "./assets/icon-honeycomb.svg?react";
 import { getScoreClass, getScoreLabel } from "./utils/scoreUtils";
 import { subscribeToExtensionJobs } from "./rootExtensionBridge";
 import type { ExtensionJob } from "./extensionMessageBridge";
+import { API_URL } from "./api";
+import { InterviewCompanion } from "./components/InterviewCompanion";
 
 type responseStratType = {
   type: "apply" | "decline" | "explore";
@@ -12,6 +20,7 @@ type responseStratType = {
 };
 
 type Analysis = {
+  jobDescription?: string;
   matchScore: number;
   verdict: string;
   summary: string;
@@ -44,9 +53,6 @@ export type SavedAnalysis = Analysis & {
   appliedAt?: string;
 };
 
-const API_URL = import.meta.env.PROD
-  ? import.meta.env.VITE_API_URL
-  : "http://localhost:3001";
 const LINKEDIN_URL = import.meta.env.VITE_LINKEDIN_URL;
 const CONTACT_EMAIL = import.meta.env.VITE_CONTACT_EMAIL;
 const SAVED_CV_STORAGE_KEY = "savedCv";
@@ -56,7 +62,20 @@ function getDemoTokenFromUrl() {
   return params.get("token");
 }
 
+function subscribeToHash(callback: () => void) {
+  window.addEventListener("hashchange", callback);
+  return () => window.removeEventListener("hashchange", callback);
+}
+
+function getHash() {
+  return window.location.hash;
+}
+
 function App() {
+  const hash = useSyncExternalStore(subscribeToHash, getHash);
+  const interviewJobId = hash.startsWith("#/interview/")
+    ? hash.slice("#/interview/".length)
+    : null;
   const [cv, setCv] = useState(
     () => localStorage.getItem(SAVED_CV_STORAGE_KEY) || ""
   );
@@ -66,6 +85,7 @@ function App() {
   );
   const [analysis, setAnalysis] = useState<Analysis | null>(null);
   const [loading, setLoading] = useState(false);
+  const [analysisError, setAnalysisError] = useState("");
 
   const [isParsingPdf, setIsParsingPdf] = useState(false);
 
@@ -82,6 +102,9 @@ function App() {
     getDemoTokenFromUrl
   );
   const [isDemoTokenValid, setIsDemoTokenValid] = useState(false);
+  const [isValidatingToken, setIsValidatingToken] = useState(() =>
+    Boolean(getDemoTokenFromUrl())
+  );
 
   const [showDemoModal, setShowDemoModal] = useState(false);
   const [showDemoBanner, setShowDemoBanner] = useState(true);
@@ -139,19 +162,25 @@ function App() {
   const analyzeJob = useCallback(async (jobText: string) => {
     setLoading(true);
     setAnalysis(null);
+    setAnalysisError("");
+    try {
+      const res = await fetch(`${API_URL}/api/analyze`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(isDemoTokenValid && demoToken ? { "x-demo-token": demoToken } : {}),
+        },
+        body: JSON.stringify({ cv, jobDescription: jobText }),
+      });
 
-    const res = await fetch(`${API_URL}/api/analyze`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        ...(isDemoTokenValid && demoToken ? { "x-demo-token": demoToken } : {}),
-      },
-      body: JSON.stringify({ cv, jobDescription: jobText }),
-    });
-
-    const data = await res.json();
-    setAnalysis(data);
-    setLoading(false);
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Analysis failed. Please try again.");
+      setAnalysis({ ...data, jobDescription: jobText });
+    } catch (error) {
+      setAnalysisError(error instanceof Error ? error.message : "Analysis failed. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   }, [cv, demoToken, isDemoTokenValid]);
 
   const analyze = useCallback(() => {
@@ -162,6 +191,7 @@ function App() {
     if (!extensionJob) return;
     if (!cv.trim()) return;
     if (loading) return;
+    if (isValidatingToken) return;
 
     const extensionJobKey = JSON.stringify(extensionJob);
     if (submittedExtensionJobsRef.current.has(extensionJobKey)) return;
@@ -173,7 +203,7 @@ function App() {
       });
     }
     void analyzeJob(extensionJob.jobText);
-  }, [analyzeJob, cv, extensionJob, loading]);
+  }, [analyzeJob, cv, extensionJob, loading, isValidatingToken]);
 
   useEffect(() => {
     return subscribeToExtensionJobs((job) => {
@@ -181,6 +211,7 @@ function App() {
         console.debug("[BeeHired extension] Populating job description");
       }
       setShowJobs(false);
+      if (window.location.hash.startsWith("#/interview/")) window.location.hash = "";
       setJobDescription(job.jobText);
       setExtensionJob(job);
     });
@@ -200,9 +231,10 @@ function App() {
 
         const data = await response.json();
 
-        if (data.valid) {
+        if (response.ok && data.valid) {
           setDemoToken(candidateToken);
           setIsDemoTokenValid(true);
+          setIsValidatingToken(false);
           return;
         }
       } catch (error) {
@@ -211,6 +243,7 @@ function App() {
 
       setDemoToken(null);
       setIsDemoTokenValid(false);
+      setIsValidatingToken(false);
     }
 
     validateDemoToken();
@@ -293,6 +326,20 @@ function App() {
     setTimeout(() => setNotInterestedCopied(false), 1600);
   }
 
+  if (interviewJobId) {
+    return (
+      <InterviewCompanion
+        key={interviewJobId}
+        jobId={interviewJobId}
+        token={getDemoTokenFromUrl()}
+        onBack={() => {
+          setShowJobs(true);
+          window.location.hash = "";
+        }}
+      />
+    );
+  }
+
   return (
     <>
       <main className="app">
@@ -354,7 +401,7 @@ function App() {
               <button
                 className={`analyzeButton ${loading ? "isLoading" : ""}`}
                 onClick={analyze}
-                disabled={loading || !cv || !jobDescription}
+                disabled={loading || isValidatingToken || !cv || !jobDescription}
               >
                 {loading && <span className="spinner" />}
                 <span>
@@ -362,6 +409,8 @@ function App() {
                 </span>
               </button>
             </div>
+
+            {analysisError && <p role="alert">{analysisError}</p>}
 
             {analysis && (
               <section className="results" ref={resultsRef}>
@@ -453,7 +502,7 @@ function App() {
         )}
 
         {showJobs && <JobsList onBack={hideJobsList} />}
-        {showDemoBanner && (
+        {showDemoBanner && !isValidatingToken && (
           <div className="demoBanner">
             {isDemoTokenValid ? (
               <span>

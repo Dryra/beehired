@@ -224,23 +224,41 @@
     }
 
     th:nth-child(2) {
-      width: 23%;
+      width: 19%;
     }
 
     th:nth-child(3) {
-      width: 14%;
+      width: 10%;
     }
 
     th:nth-child(4) {
-      width: 16%;
+      width: 15%;
     }
 
     th:nth-child(5) {
-      width: 16%;
+      width: 15%;
     }
 
     th:nth-child(6) {
-      width: 16%;
+      width: 14%;
+    }
+
+    th:nth-child(7) { width: 12%; }
+
+    .interviewLaunch {
+      display: inline-flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 5px;
+      padding: 8px;
+      border-radius: 10px;
+      background: #111827;
+      color: #facc15;
+      text-decoration: none;
+      font-size: 12px;
+      font-weight: 700;
+      &:hover { background: #374151; }
+      &:focus-visible { outline: 3px solid #8a6500; outline-offset: 3px; }
     }
 
     th,

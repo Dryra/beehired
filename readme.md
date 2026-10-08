@@ -101,12 +101,15 @@ npm install
 ```bash
 OPENAI_API_KEY=your_openai_api_key_here
 DEMO_MODE=false
+DEMO_TOKEN=your_private_access_token
+# Optional; defaults to the model already used by BeeHired
+INTERVIEW_MODEL=gpt-5.5
 ```
 
 ### 5. Run frontend
 
 ```bash
-cd frontend
+cd client
 npm run dev
 ```
 
@@ -122,6 +125,43 @@ npm run dev
 ```bash
 npm run dev
 ```
+
+### Interview companion
+
+Open the frontend with `?token=YOUR_DEMO_TOKEN` for live AI access. Both a valid
+token and `DEMO_MODE=false` are required, including on localhost. Forced demo
+mode disables live interview practice; the companion never presents sample
+feedback as a real evaluation.
+
+In **Saved Jobs → Application tracker**, set a job to **In progress**, then click
+the assistant **Practice** button. Choose **1st round · Introductory interview**,
+**2nd round · Technical interview**, or **3rd round · Soft skills interview** and
+an Easy, Medium, or Hard difficulty. Each session asks ten questions, evaluates
+each answer, and adapts the next question to your answers and job requirements.
+
+New analyses retain the original job description. For older jobs, paste it into
+the companion before starting; it is saved with that job. The current saved CV
+is included as context. Round and difficulty sessions remain separate while the
+page stays open; leaving or reloading the page clears practice history.
+
+Coding questions use CodeMirror with syntax highlighting for JavaScript,
+TypeScript, Python, Java, SQL, and C++, plus plain text for other languages.
+Code is reviewed by the model and is not executed. Feedback includes a score,
+strengths, improvements, and an example answer.
+
+The backend uses structured Responses API outputs and changes interview
+instructions per round/difficulty; this is contextual prompting, not model
+fine-tuning. Requests use `store: false`. The description, saved CV, and current
+session history are sent to OpenAI for live practice. The endpoint validates
+input sizes and round types and retains the existing token-based access control.
+Implementation reference: [OpenAI structured outputs](https://developers.openai.com/api/docs/guides/structured-outputs?api-mode=responses).
+
+Run `npm test --prefix client` and `npm test --prefix server` for the UI flow and
+API contract tests. Tests mock model responses and do not call OpenAI.
+
+`VITE_API_URL` can override the API origin in either development or production.
+Without it, development uses `http://localhost:3001`; production uses the same
+origin (which must route `/api` to the backend).
 
 ### 👨‍💻 Author
 

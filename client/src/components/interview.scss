@@ -214,6 +214,41 @@
     flex-wrap: wrap;
     gap: 12px;
   }
+  .speechTextInput {
+    border: 1px solid #cfd2d6;
+    border-radius: 12px;
+    background: white;
+    textarea {
+      border: 0;
+      margin: 0;
+    }
+    &:focus-within {
+      border-color: var(--round-accent);
+    }
+  }
+  .speechAnswer {
+    padding: 12px 16px;
+    border-top: 1px solid #e5e7eb;
+    small {
+      display: block;
+      margin-top: 10px;
+    }
+  }
+  .speechControls {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .speechMic {
+    display: inline-flex;
+    gap: 8px;
+    align-items: center;
+    background: #facc15;
+    &.isRecording {
+      background: #b42318;
+      color: white;
+    }
+  }
   .cm-editor {
     border-radius: 10px;
     overflow: hidden;

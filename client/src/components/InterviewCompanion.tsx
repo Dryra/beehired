@@ -11,6 +11,7 @@ import type {
   Round,
 } from "../interviewTypes";
 import "./interview.scss";
+import { SpeechAnswerButton } from "./SpeechAnswerButton";
 
 const CodeEditor = lazy(() => import("./InterviewCodeEditor"));
 const ROUNDS: Record<
@@ -79,6 +80,8 @@ export function InterviewCompanion({
   const [difficulty, setDifficulty] = useState<Difficulty>("medium");
   const [sessions, setSessions] = useState<Record<string, Session>>({});
   const [busy, setBusy] = useState(false);
+  const [voiceBusy, setVoiceBusy] = useState(false);
+  const inputBusy = busy || voiceBusy;
   const [error, setError] = useState("");
   const controller = useRef<AbortController | null>(null);
   const questionHeading = useRef<HTMLHeadingElement>(null);
@@ -101,7 +104,7 @@ export function InterviewCompanion({
     }));
   }
 
-  async function requestTurn() {
+  async function requestTurn(answer = session.answer) {
     if (!job || controller.current || !description.trim()) return;
     const abortController = new AbortController();
     controller.current = abortController;
@@ -141,7 +144,7 @@ export function InterviewCompanion({
           difficulty,
           history: session.turns,
           question: session.question,
-          answer: session.question ? session.answer : "",
+          answer: session.question ? answer : "",
           language: session.language,
         }),
       });
@@ -159,7 +162,7 @@ export function InterviewCompanion({
             ...session.turns,
             {
               question: session.question,
-              answer: session.answer,
+              answer,
               language: session.language,
               feedback: data.feedback,
             },
@@ -235,7 +238,7 @@ export function InterviewCompanion({
           <select
             id="interview-round"
             value={round}
-            disabled={busy}
+            disabled={inputBusy}
             onChange={(e) => {
               setRound(e.target.value as Round);
               setError("");
@@ -251,7 +254,7 @@ export function InterviewCompanion({
           <select
             id="interview-difficulty"
             value={difficulty}
-            disabled={busy}
+            disabled={inputBusy}
             onChange={(e) => {
               setDifficulty(e.target.value as Difficulty);
               setError("");
@@ -350,7 +353,7 @@ export function InterviewCompanion({
                 <form
                   onSubmit={(e) => {
                     e.preventDefault();
-                    void requestTurn();
+                    if (!inputBusy) void requestTurn();
                   }}
                 >
                   {session.question.type === "coding" ? (
@@ -391,20 +394,40 @@ export function InterviewCompanion({
                   ) : (
                     <>
                       <label htmlFor="interview-answer">Your answer</label>
-                      <textarea
-                        id="interview-answer"
-                        value={session.answer}
-                        maxLength={20000}
-                        disabled={busy}
-                        onChange={(e) =>
-                          updateSession({ answer: e.target.value })
-                        }
-                        placeholder={
-                          round === "soft-skills"
-                            ? "Describe the situation, your actions, and the outcome…"
-                            : "Talk through your answer…"
-                        }
-                      />
+                      <div className="speechTextInput">
+                        <textarea
+                          id="interview-answer"
+                          value={session.answer}
+                          maxLength={20000}
+                          disabled={inputBusy}
+                          onChange={(e) =>
+                            updateSession({ answer: e.target.value })
+                          }
+                          placeholder={
+                            round === "soft-skills"
+                              ? "Describe the situation, your actions, and the outcome…"
+                              : "Talk through your answer…"
+                          }
+                        />
+                        <SpeechAnswerButton
+                          token={token}
+                          disabled={busy}
+                          onActivityChange={setVoiceBusy}
+                          onTranscript={async (text) => {
+                            const answer = [session.answer.trim(), text]
+                              .filter(Boolean)
+                              .join("\n\n");
+                            updateSession({ answer });
+                            if (answer.length > 20000) {
+                              setError(
+                                "Your transcribed answer exceeds 20,000 characters. Shorten it before sending."
+                              );
+                              return;
+                            }
+                            await requestTurn(answer);
+                          }}
+                        />
+                      </div>
                     </>
                   )}
                   <div className="interviewAnswerActions">
@@ -416,7 +439,7 @@ export function InterviewCompanion({
                       className="interviewPrimary"
                       type="submit"
                       disabled={
-                        busy ||
+                        inputBusy ||
                         !session.answer.trim() ||
                         session.answer.length > 20000
                       }

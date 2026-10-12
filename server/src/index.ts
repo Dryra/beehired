@@ -1,12 +1,13 @@
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
-import OpenAI from "openai";
+import OpenAI, { toFile } from "openai";
 import cvRoutes from "./routes/cvRoutes";
 import { getRandomJob } from "./utils/testDataUtils";
 import { zodTextFormat } from "openai/helpers/zod";
 import { createInterviewRouter } from "./routes/interviewRoutes";
 import { interviewInstructions, interviewOutputSchema } from "./interview";
+import { createTranscriptionRouter } from "./routes/transcriptionRoutes";
 
 dotenv.config();
 
@@ -35,6 +36,24 @@ app.get("/api/demo-token/validate", (req, res) => {
 
   res.json({ valid: DEMO_MODE !== "true" && isValidDemoToken(token) });
 });
+
+app.use(
+  "/api",
+  createTranscriptionRouter({
+    canUseAI: (token) => DEMO_MODE !== "true" && isValidDemoToken(token),
+    transcribe: async ({ buffer, filename, mimeType }) => {
+      const result = await openai.audio.transcriptions.create(
+        {
+          model: "whisper-1",
+          file: await toFile(buffer, filename, { type: mimeType }),
+          response_format: "json",
+        },
+        { timeout: 90000, maxRetries: 0 }
+      );
+      return result.text;
+    },
+  })
+);
 
 app.use(
   "/api",

@@ -150,13 +150,13 @@ Code is reviewed by the model and is not executed. Feedback includes a score,
 strengths, improvements, and an example answer.
 
 For spoken answers, click **Speak** inside the interview text-answer box, allow
-microphone access, and click **Stop & send** when finished. Whisper (`whisper-1`)
+microphone access, and click **Stop & transcribe** when finished. Whisper (`whisper-1`)
 transcribes the recording; the transcript is appended to any typed draft and
-automatically submitted for feedback. **Cancel** discards the recording or
+left editable. Review or change your answer, then click **Get feedback** to submit. **Cancel** discards the recording or
 cancels an upload. If evaluation fails, the combined answer remains editable.
 Voice input is available for text questions, while coding questions keep the
 code editor. Use HTTPS or localhost and a browser with microphone recording
-support. Recordings automatically stop and submit after five minutes, with a
+support. Recordings automatically stop and transcribe after five minutes, with a
 20 MB upload limit. Audio goes through the authenticated backend to OpenAI;
 the application does not save recordings to disk or browser storage. The existing
 `OPENAI_API_KEY`, access token and demo-mode settings also apply to transcription.

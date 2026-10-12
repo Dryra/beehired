@@ -413,7 +413,7 @@ export function InterviewCompanion({
                           token={token}
                           disabled={busy}
                           onActivityChange={setVoiceBusy}
-                          onTranscript={async (text) => {
+                          onTranscript={(text) => {
                             const answer = [session.answer.trim(), text]
                               .filter(Boolean)
                               .join("\n\n");
@@ -424,7 +424,7 @@ export function InterviewCompanion({
                               );
                               return;
                             }
-                            await requestTurn(answer);
+                            setError("");
                           }}
                         />
                       </div>

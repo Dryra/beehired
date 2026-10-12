@@ -55,7 +55,7 @@ function open() {
 }
 async function record() {
   fireEvent.click(screen.getByRole("button", { name: "Record spoken answer" }));
-  await screen.findByRole("button", { name: "Stop recording and send answer" });
+  await screen.findByRole("button", { name: "Stop recording and transcribe" });
 }
 beforeEach(() => {
   vi.clearAllMocks();
@@ -77,7 +77,7 @@ it("records, uploads with authentication, transcribes once and releases the micr
   await record();
   expect(onActivityChange).toHaveBeenCalledWith(true);
   fireEvent.click(
-    screen.getByRole("button", { name: "Stop recording and send answer" })
+    screen.getByRole("button", { name: "Stop recording and transcribe" })
   );
   await waitFor(() =>
     expect(onTranscript).toHaveBeenCalledExactlyOnceWith("My spoken answer")
@@ -134,14 +134,14 @@ it("keeps transcription failures and empty speech from being submitted", async (
   open();
   await record();
   fireEvent.click(
-    screen.getByRole("button", { name: "Stop recording and send answer" })
+    screen.getByRole("button", { name: "Stop recording and transcribe" })
   );
   expect((await screen.findByRole("alert")).textContent).toContain("No speech");
   expect(onTranscript).not.toHaveBeenCalled();
   fetchMock.mockResolvedValueOnce(reply({ text: "  " }));
   await record();
   fireEvent.click(
-    screen.getByRole("button", { name: "Stop recording and send answer" })
+    screen.getByRole("button", { name: "Stop recording and transcribe" })
   );
   await screen.findByRole("alert");
   expect(onTranscript).not.toHaveBeenCalled();
@@ -157,7 +157,7 @@ it("aborts uploads and ignores late results on unmount", async () => {
   const view = open();
   await record();
   fireEvent.click(
-    screen.getByRole("button", { name: "Stop recording and send answer" })
+    screen.getByRole("button", { name: "Stop recording and transcribe" })
   );
   await waitFor(() => expect(fetchMock).toHaveBeenCalled());
   const signal = fetchMock.mock.calls[0][1].signal;
@@ -179,7 +179,7 @@ it("releases the microphone when leaving during a recording", async () => {
   expect(fetchMock).not.toHaveBeenCalled();
 });
 
-it("automatically stops and submits after five minutes", async () => {
+it("automatically stops and transcribes after five minutes", async () => {
   vi.useFakeTimers();
   fetchMock.mockResolvedValue(reply({ text: "Timed answer" }));
   open();
@@ -205,7 +205,7 @@ it("shows a useful fallback when browser recording is unavailable", async () => 
   expect(getUserMedia).not.toHaveBeenCalled();
 });
 
-it("appends spoken words to the draft and submits the exact answer for evaluation", async () => {
+it("keeps the transcript editable and only submits after Get feedback is clicked", async () => {
   const question = {
     type: "general",
     prompt: "Introduce yourself",
@@ -250,14 +250,24 @@ it("appends spoken words to the draft and submits the exact answer for evaluatio
     reply({ error: "Evaluation unavailable" }, 502)
   );
   fireEvent.click(
-    screen.getByRole("button", { name: "Stop recording and send answer" })
+    screen.getByRole("button", { name: "Stop recording and transcribe" })
   );
+  await waitFor(() => {
+    const answer = screen.getByLabelText("Your answer") as HTMLTextAreaElement;
+    expect(answer.value).toBe("Typed introduction\n\nSpoken experience");
+    expect(answer.disabled).toBe(false);
+  });
+  expect(fetchMock).toHaveBeenCalledTimes(2);
+  fireEvent.change(screen.getByLabelText("Your answer"), {
+    target: { value: "My edited response" },
+  });
+  fireEvent.click(screen.getByRole("button", { name: "Get feedback" }));
   await screen.findByText("Evaluation unavailable");
   expect(fetchMock).toHaveBeenCalledTimes(3);
   expect(JSON.parse(fetchMock.mock.calls[2][1].body).answer).toBe(
-    "Typed introduction\n\nSpoken experience"
+    "My edited response"
   );
   expect(
     (screen.getByLabelText("Your answer") as HTMLTextAreaElement).value
-  ).toBe("Typed introduction\n\nSpoken experience");
+  ).toBe("My edited response");
 });

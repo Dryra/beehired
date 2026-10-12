@@ -35,7 +35,7 @@ export function SpeechAnswerButton({
   token: string | null;
   disabled: boolean;
   onActivityChange: (active: boolean) => void;
-  onTranscript: (text: string) => Promise<void>;
+  onTranscript: (text: string) => void | Promise<void>;
 }) {
   const [phase, setPhase] = useState<Phase>("idle");
   const [error, setError] = useState("");
@@ -97,7 +97,7 @@ export function SpeechAnswerButton({
         throw new Error("No speech was recognized. Please try again.");
       if (active.current !== recording || recording.controller.signal.aborted)
         return;
-      // End recording activity before handing off to the answer request.
+      // End recording activity before adding the transcript to the editable draft.
       finish(recording);
       await onTranscript(data.text.trim());
     } catch (err) {
@@ -112,7 +112,7 @@ export function SpeechAnswerButton({
     }
   }
 
-  function stopAndSend() {
+  function stopAndTranscribe() {
     const recording = active.current;
     if (recording?.recorder?.state === "recording") {
       setPhase("transcribing");
@@ -180,7 +180,7 @@ export function SpeechAnswerButton({
         void transcribe(recording, chunks, recorder.mimeType || mimeType);
       recorder.start(1000);
       setPhase("recording");
-      recording.timer = window.setTimeout(stopAndSend, 5 * 60 * 1000);
+      recording.timer = window.setTimeout(stopAndTranscribe, 5 * 60 * 1000);
     } catch (err) {
       if (active.current !== recording) return;
       setError(
@@ -205,10 +205,12 @@ export function SpeechAnswerButton({
             phase === "permission" ||
             phase === "transcribing"
           }
-          onClick={phase === "recording" ? stopAndSend : () => void start()}
+          onClick={
+            phase === "recording" ? stopAndTranscribe : () => void start()
+          }
           aria-label={
             phase === "recording"
-              ? "Stop recording and send answer"
+              ? "Stop recording and transcribe"
               : "Record spoken answer"
           }
           aria-pressed={phase === "recording"}
@@ -226,7 +228,7 @@ export function SpeechAnswerButton({
             <path d="M5 10v2a7 7 0 0 0 14 0v-2M12 19v3M8 22h8" />
           </svg>
           {phase === "recording"
-            ? "Stop & send"
+            ? "Stop & transcribe"
             : phase === "permission"
               ? "Allow microphone…"
               : phase === "transcribing"
@@ -246,10 +248,10 @@ export function SpeechAnswerButton({
       </div>
       <small role="status">
         {phase === "recording"
-          ? "Recording… Stop & send when ready. Automatically sends after 5 minutes."
+          ? "Recording… Stop & transcribe when ready. Automatically stops after 5 minutes."
           : phase === "transcribing"
             ? "Turning your speech into an answer…"
-            : "Speak, then Stop & send. Adds to your typed answer and submits automatically."}
+            : "Speak, then Stop & transcribe. Review and edit your answer before clicking Get feedback."}
       </small>
       {error && (
         <p className="interviewError" role="alert">

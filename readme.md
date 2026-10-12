@@ -154,6 +154,10 @@ solution. **No idea** shows a strong example answer directly, including a soluti
 for coding questions, without grading or submitting your draft. Both use the
 current question, interview settings, job description and CV. Your draft stays
 editable, and you can still practice your own response and choose **Get feedback**.
+After using either help button, **Next question** moves on without feedback.
+Skipped questions count toward the ten-question session and appear as ungraded
+in the review; they do not affect the average score. On the last question, use
+**Finish without feedback** to complete the session.
 
 For spoken answers, click **Speak** inside the interview text-answer box, allow
 microphone access, and click **Stop & transcribe** when finished. Whisper (`whisper-1`)

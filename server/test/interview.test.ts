@@ -51,6 +51,37 @@ test("installed SDK serializes the response schema as strict structured output",
   );
 });
 
+test("skip accepts an empty answer, forbids grading, and retains ungraded history", () => {
+  const skip = { ...request, action: "skip" as const, question };
+  assert.equal(interviewRequestSchema.safeParse(skip).success, true);
+  assert.equal(
+    interviewRequestSchema.safeParse({ ...skip, question: null }).success,
+    false
+  );
+  assert.doesNotThrow(() =>
+    validateInterviewOutput(skip, { question, feedback: null })
+  );
+  assert.throws(() => validateInterviewOutput(skip, { question, feedback }));
+  const history = Array.from({ length: 9 }, () => ({
+    question,
+    answer: "",
+    language: "plaintext" as const,
+    skipped: true,
+    feedback: null,
+  }));
+  assert.equal(
+    interviewRequestSchema.safeParse({ ...skip, history }).success,
+    true
+  );
+  assert.doesNotThrow(() =>
+    validateInterviewOutput(
+      { ...skip, history },
+      { question: null, feedback: null }
+    )
+  );
+  assert.match(interviewInstructions(skip), /Do not evaluate the draft/);
+});
+
 test("round and difficulty change instructions and preserve the untrusted-data boundary", () => {
   for (const round of ["intro", "technical", "soft-skills"] as const) {
     for (const difficulty of ["easy", "medium", "hard"] as const) {
@@ -152,7 +183,10 @@ test("HTTP endpoint enforces access, validation, turn context, and recoverable p
       generate: async (input) => {
         received.push(input);
         if (fail) throw new Error("private provider details");
-        return { question, feedback: input.question ? feedback : null };
+        return {
+          question,
+          feedback: input.question && input.action !== "skip" ? feedback : null,
+        };
       },
     })
   );
@@ -187,6 +221,26 @@ test("HTTP endpoint enforces access, validation, turn context, and recoverable p
     assert.equal(answer.status, 200);
     assert.equal(received[1].answer, "I build accessible applications");
     assert.deepEqual(received[1].job, request.job);
+    const skipped = await post({ ...request, question, action: "skip" });
+    assert.equal(skipped.status, 200);
+    assert.deepEqual(await skipped.json(), { question, feedback: null });
+    const finalSkip = await post({
+      ...request,
+      question,
+      action: "skip",
+      history: Array.from({ length: 9 }, () => ({
+        question,
+        answer: "",
+        language: "plaintext",
+        skipped: true,
+        feedback: null,
+      })),
+    });
+    assert.deepEqual(await finalSkip.json(), {
+      question: null,
+      feedback: null,
+    });
+    assert.equal(received.length, 3);
     fail = true;
     const failure = await post(request);
     assert.equal(failure.status, 502);

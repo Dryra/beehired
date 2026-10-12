@@ -26,7 +26,10 @@ export type InterviewTurn = {
   question: InterviewQuestion;
   answer: string;
   language: CodeLanguage;
-  feedback: InterviewFeedback;
+  feedback: InterviewFeedback | null;
+  skipped?: boolean;
+  hint?: string;
+  modelAnswer?: string;
 };
 export type InterviewResponse = {
   question: InterviewQuestion | null;

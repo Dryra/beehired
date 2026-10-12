@@ -84,6 +84,7 @@ export function InterviewCompanion({
   const [difficulty, setDifficulty] = useState<Difficulty>("medium");
   const [sessions, setSessions] = useState<Record<string, Session>>({});
   const [busy, setBusy] = useState(false);
+  const [skipping, setSkipping] = useState(false);
   const [helpBusy, setHelpBusy] = useState<"hint" | "answer" | null>(null);
   const [voiceBusy, setVoiceBusy] = useState(false);
   const inputBusy = busy || voiceBusy || helpBusy !== null;
@@ -94,7 +95,10 @@ export function InterviewCompanion({
   const session = sessions[sessionKey] || emptySession();
   const config = ROUNDS[round];
   const finished =
-    session.started && !!session.feedback && !session.nextQuestion;
+    session.started && session.turns.length === 10 && !session.nextQuestion;
+  const gradedFeedback = session.turns.flatMap((turn) =>
+    turn.feedback ? [turn.feedback] : []
+  );
   const hasStarted = Object.values(sessions).some((value) => value.started);
 
   useEffect(() => () => controller.current?.abort(), []);
@@ -109,12 +113,13 @@ export function InterviewCompanion({
     }));
   }
 
-  async function requestTurn(answer = session.answer) {
+  async function requestTurn(answer = session.answer, skip = false) {
     if (!job || controller.current || !description.trim()) return;
     const abortController = new AbortController();
     controller.current = abortController;
     const timeout = window.setTimeout(() => abortController.abort(), 100000);
     setBusy(true);
+    setSkipping(skip);
     setError("");
     try {
       // Read the latest list so editing a description never overwrites other job changes.
@@ -151,6 +156,7 @@ export function InterviewCompanion({
           question: session.question,
           answer: session.question ? answer : "",
           language: session.language,
+          ...(skip ? { action: "skip" } : {}),
         }),
       });
       const data: InterviewResponse & { error?: string } =
@@ -159,7 +165,34 @@ export function InterviewCompanion({
         throw new Error(
           data.error || "Could not reach the interview assistant."
         );
-      if (session.question && data.feedback) {
+      if (
+        skip &&
+        session.question &&
+        data.feedback === null &&
+        (data.question || session.turns.length === 9)
+      ) {
+        updateSession({
+          turns: [
+            ...session.turns,
+            {
+              question: session.question,
+              answer: session.answer,
+              language: session.language,
+              feedback: null,
+              skipped: true,
+              hint: session.hint,
+              modelAnswer: session.modelAnswer,
+            },
+          ],
+          question: data.question,
+          nextQuestion: null,
+          feedback: null,
+          answer: data.question?.starterCode || "",
+          language: data.question?.language || "plaintext",
+          hint: undefined,
+          modelAnswer: undefined,
+        });
+      } else if (!skip && session.question && data.feedback) {
         updateSession({
           feedback: data.feedback,
           nextQuestion: data.question,
@@ -195,6 +228,7 @@ export function InterviewCompanion({
       window.clearTimeout(timeout);
       controller.current = null;
       setBusy(false);
+      setSkipping(false);
     }
   }
 
@@ -429,6 +463,20 @@ export function InterviewCompanion({
                       {helpBusy === "answer" ? "Preparing answer…" : "No idea"}
                     </button>
                   </div>
+                  {(session.hint || session.modelAnswer) && (
+                    <button
+                      className="interviewPrimary"
+                      type="button"
+                      disabled={inputBusy}
+                      onClick={() => void requestTurn("", true)}
+                    >
+                      {skipping
+                        ? "Preparing next question…"
+                        : session.turns.length === 9
+                          ? "Finish without feedback"
+                          : "Next question →"}
+                    </button>
+                  )}
                   <div aria-live="polite">
                     {session.hint && !session.modelAnswer && (
                       <aside className="interviewHint">
@@ -544,7 +592,9 @@ export function InterviewCompanion({
                         session.answer.length > 20000
                       }
                     >
-                      {busy ? "Reviewing your answer…" : "Get feedback"}
+                      {busy && !skipping
+                        ? "Reviewing your answer…"
+                        : "Get feedback"}
                     </button>
                   </div>
                 </form>
@@ -587,30 +637,36 @@ export function InterviewCompanion({
                 <summary>Example of a stronger answer</summary>
                 <pre>{session.feedback.exampleAnswer}</pre>
               </details>
-              {finished ? (
-                <div className="interviewComplete">
-                  <h3>Practice complete</h3>
-                  <p>
-                    You answered {session.turns.length} questions. Average
-                    feedback score:{" "}
-                    {(
-                      session.turns.reduce(
-                        (sum, turn) => sum + turn.feedback.score,
-                        0
-                      ) / session.turns.length
-                    ).toFixed(1)}{" "}
-                    / 10.
-                  </p>
-                  <button onClick={() => updateSession(emptySession())}>
-                    Start a fresh session
-                  </button>
-                </div>
-              ) : (
+              {!finished && (
                 <button className="interviewPrimary" onClick={nextQuestion}>
                   Next question →
                 </button>
               )}
             </section>
+          )}
+          {finished && (
+            <div className="interviewComplete">
+              <h3>Practice complete</h3>
+              <p>
+                {gradedFeedback.length} answered ·{" "}
+                {session.turns.length - gradedFeedback.length} skipped.
+              </p>
+              {gradedFeedback.length > 0 ? (
+                <p>
+                  Average feedback score:{" "}
+                  {(
+                    gradedFeedback.reduce((sum, item) => sum + item.score, 0) /
+                    gradedFeedback.length
+                  ).toFixed(1)}{" "}
+                  / 10. Skipped questions are not scored.
+                </p>
+              ) : (
+                <p>No answers were graded in this session.</p>
+              )}
+              <button onClick={() => updateSession(emptySession())}>
+                Start a fresh session
+              </button>
+            </div>
           )}
           {error && (
             <p className="interviewError" role="alert">
@@ -620,24 +676,38 @@ export function InterviewCompanion({
           {session.turns.length > 0 && (
             <details className="interviewHistory">
               <summary>
-                Session review · {session.turns.length} answered
+                Session review · {gradedFeedback.length} answered ·{" "}
+                {session.turns.length - gradedFeedback.length} skipped
               </summary>
               {session.turns.map((turn, i) => (
                 <article key={i}>
                   <h3>
-                    {i + 1}. {turn.question.focus} · {turn.feedback.score}/10
+                    {i + 1}. {turn.question.focus} ·{" "}
+                    {turn.feedback
+                      ? `${turn.feedback.score}/10`
+                      : "Skipped · not graded"}
                   </h3>
                   <p>{turn.question.prompt}</p>
                   <details>
-                    <summary>Your answer and feedback</summary>
-                    <pre>{turn.answer}</pre>
-                    <p>{turn.feedback.summary}</p>
-                    <ul>
-                      {turn.feedback.improvements.map((item, index) => (
-                        <li key={index}>{item}</li>
-                      ))}
-                    </ul>
-                    <pre>{turn.feedback.exampleAnswer}</pre>
+                    <summary>
+                      {turn.skipped
+                        ? "Draft and help"
+                        : "Your answer and feedback"}
+                    </summary>
+                    <pre>{turn.answer || "No answer submitted."}</pre>
+                    {turn.hint && <p>Hint: {turn.hint}</p>}
+                    {turn.modelAnswer && <pre>{turn.modelAnswer}</pre>}
+                    {turn.feedback && (
+                      <>
+                        <p>{turn.feedback.summary}</p>
+                        <ul>
+                          {turn.feedback.improvements.map((item, index) => (
+                            <li key={index}>{item}</li>
+                          ))}
+                        </ul>
+                        <pre>{turn.feedback.exampleAnswer}</pre>
+                      </>
+                    )}
                   </details>
                 </article>
               ))}

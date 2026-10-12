@@ -73,6 +73,51 @@ afterEach(() => {
 });
 
 describe("interview companion", () => {
+  it("skips after help without feedback, retains history, and completes an ungraded session", async () => {
+    fetchMock.mockResolvedValueOnce(reply({ question, feedback: null }));
+    open();
+    fireEvent.click(screen.getByRole("button", { name: "Start practice" }));
+    for (let i = 0; i < 10; i++) {
+      await screen.findByLabelText("Your answer");
+      fetchMock.mockResolvedValueOnce(
+        reply({ text: `Consider project ${i}.` })
+      );
+      fireEvent.click(
+        screen.getByRole("button", { name: i % 2 ? "No idea" : "Hint" })
+      );
+      await screen.findByText(`Consider project ${i}.`);
+      fetchMock.mockResolvedValueOnce(
+        reply({
+          question: i === 9 ? null : { ...question, focus: `Topic ${i + 2}` },
+          feedback: null,
+        })
+      );
+      fireEvent.click(
+        screen.getByRole("button", {
+          name: i === 9 ? "Finish without feedback" : "Next question →",
+        })
+      );
+      await waitFor(() =>
+        expect(fetchMock).toHaveBeenCalledTimes(1 + (i + 1) * 2)
+      );
+      const body = JSON.parse(fetchMock.mock.calls.at(-1)![1].body);
+      expect(body.action).toBe("skip");
+      expect(body.history).toHaveLength(i);
+      if (i)
+        expect(body.history[0]).toMatchObject({
+          skipped: true,
+          feedback: null,
+        });
+      expect(
+        screen.queryByRole("heading", { name: "Your feedback" })
+      ).toBeNull();
+    }
+    await screen.findByRole("heading", { name: "Practice complete" });
+    expect(
+      screen.getByText("No answers were graded in this session.")
+    ).toBeTruthy();
+  });
+
   it("shows a short hint and direct model answer without grading or changing the draft", async () => {
     fetchMock.mockResolvedValueOnce(reply({ question, feedback: null }));
     open();

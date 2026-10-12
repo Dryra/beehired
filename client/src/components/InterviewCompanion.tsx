@@ -38,6 +38,8 @@ const ROUNDS: Record<
   },
 };
 type Session = {
+  hint?: string;
+  modelAnswer?: string;
   question: InterviewQuestion | null;
   nextQuestion: InterviewQuestion | null;
   feedback: InterviewFeedback | null;
@@ -47,6 +49,8 @@ type Session = {
   started: boolean;
 };
 const emptySession = (): Session => ({
+  hint: undefined,
+  modelAnswer: undefined,
   question: null,
   nextQuestion: null,
   feedback: null,
@@ -80,8 +84,9 @@ export function InterviewCompanion({
   const [difficulty, setDifficulty] = useState<Difficulty>("medium");
   const [sessions, setSessions] = useState<Record<string, Session>>({});
   const [busy, setBusy] = useState(false);
+  const [helpBusy, setHelpBusy] = useState<"hint" | "answer" | null>(null);
   const [voiceBusy, setVoiceBusy] = useState(false);
-  const inputBusy = busy || voiceBusy;
+  const inputBusy = busy || voiceBusy || helpBusy !== null;
   const [error, setError] = useState("");
   const controller = useRef<AbortController | null>(null);
   const questionHeading = useRef<HTMLHeadingElement>(null);
@@ -201,7 +206,59 @@ export function InterviewCompanion({
       feedback: null,
       answer: session.nextQuestion.starterCode,
       language: session.nextQuestion.language,
+      hint: undefined,
+      modelAnswer: undefined,
     });
+  }
+
+  async function requestHelp(mode: "hint" | "answer") {
+    if (!job || !session.question || inputBusy || controller.current) return;
+    const abortController = new AbortController();
+    controller.current = abortController;
+    const timeout = window.setTimeout(() => abortController.abort(), 100000);
+    setHelpBusy(mode);
+    setError("");
+    try {
+      const response = await fetch(`${API_URL}/api/interview/help`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { "x-demo-token": token } : {}),
+        },
+        signal: abortController.signal,
+        body: JSON.stringify({
+          mode,
+          round,
+          difficulty,
+          question: session.question,
+          language: session.language,
+          job: {
+            companyName: job.companyName || "",
+            jobName: job.jobName || "",
+            description: description.trim(),
+            cv: localStorage.getItem("savedCv") || "",
+          },
+        }),
+      });
+      const data = await response.json();
+      if (!response.ok)
+        throw new Error(data.error || "Could not load interview help.");
+      if (typeof data.text !== "string" || !data.text.trim())
+        throw new Error("No help was returned. Please try again.");
+      updateSession(
+        mode === "hint" ? { hint: data.text } : { modelAnswer: data.text }
+      );
+    } catch (err) {
+      setError(
+        err instanceof Error && err.name !== "AbortError"
+          ? err.message
+          : "Interview help timed out. Please try again."
+      );
+    } finally {
+      window.clearTimeout(timeout);
+      controller.current = null;
+      setHelpBusy(null);
+    }
   }
 
   if (!job || job.applicationStatus !== "in-progress")
@@ -350,6 +407,49 @@ export function InterviewCompanion({
               </h2>
               <p className="interviewPrompt">{session.question.prompt}</p>
               {!session.feedback && (
+                <div className="interviewHelp">
+                  <div className="interviewHelpActions">
+                    <button
+                      type="button"
+                      disabled={
+                        inputBusy ||
+                        !token ||
+                        !!session.hint ||
+                        !!session.modelAnswer
+                      }
+                      onClick={() => void requestHelp("hint")}
+                    >
+                      {helpBusy === "hint" ? "Getting hint…" : "Hint"}
+                    </button>
+                    <button
+                      type="button"
+                      disabled={inputBusy || !token || !!session.modelAnswer}
+                      onClick={() => void requestHelp("answer")}
+                    >
+                      {helpBusy === "answer" ? "Preparing answer…" : "No idea"}
+                    </button>
+                  </div>
+                  <div aria-live="polite">
+                    {session.hint && !session.modelAnswer && (
+                      <aside className="interviewHint">
+                        <h3>Hint</h3>
+                        <p>{session.hint}</p>
+                      </aside>
+                    )}
+                    {session.modelAnswer && (
+                      <aside className="interviewModelAnswer">
+                        <h3>Strong example answer</h3>
+                        <pre>{session.modelAnswer}</pre>
+                        <small>
+                          You can study this answer, then practice your own
+                          response below. Nothing has been submitted or graded.
+                        </small>
+                      </aside>
+                    )}
+                  </div>
+                </div>
+              )}
+              {!session.feedback && (
                 <form
                   onSubmit={(e) => {
                     e.preventDefault();
@@ -362,7 +462,7 @@ export function InterviewCompanion({
                       <select
                         id="code-language"
                         value={session.language}
-                        disabled={busy}
+                        disabled={inputBusy}
                         onChange={(e) =>
                           updateSession({
                             language: e.target.value as CodeLanguage,
@@ -381,7 +481,7 @@ export function InterviewCompanion({
                         <CodeEditor
                           value={session.answer}
                           language={session.language}
-                          disabled={busy}
+                          disabled={inputBusy}
                           onChange={(answer) => updateSession({ answer })}
                         />
                       </Suspense>
@@ -411,7 +511,7 @@ export function InterviewCompanion({
                         />
                         <SpeechAnswerButton
                           token={token}
-                          disabled={busy}
+                          disabled={busy || helpBusy !== null}
                           onActivityChange={setVoiceBusy}
                           onTranscript={(text) => {
                             const answer = [session.answer.trim(), text]

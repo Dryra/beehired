@@ -73,6 +73,71 @@ afterEach(() => {
 });
 
 describe("interview companion", () => {
+  it("shows a short hint and direct model answer without grading or changing the draft", async () => {
+    fetchMock.mockResolvedValueOnce(reply({ question, feedback: null }));
+    open();
+    fireEvent.click(screen.getByRole("button", { name: "Start practice" }));
+    fireEvent.change(await screen.findByLabelText("Your answer"), {
+      target: { value: "My draft" },
+    });
+    fetchMock.mockResolvedValueOnce(
+      reply({ text: "Connect one relevant project to the role." })
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Hint" }));
+    await screen.findByText("Connect one relevant project to the role.");
+    expect(fetchMock.mock.calls[1][0]).toMatch(/\/api\/interview\/help$/);
+    expect(JSON.parse(fetchMock.mock.calls[1][1].body)).toMatchObject({
+      mode: "hint",
+      question,
+      round: "intro",
+    });
+    fetchMock.mockResolvedValueOnce(
+      reply({ text: "A strong example tailored to the role." })
+    );
+    fireEvent.click(screen.getByRole("button", { name: "No idea" }));
+    await screen.findByText("A strong example tailored to the role.");
+    expect(JSON.parse(fetchMock.mock.calls[2][1].body).mode).toBe("answer");
+    expect(
+      (screen.getByLabelText("Your answer") as HTMLTextAreaElement).value
+    ).toBe("My draft");
+    expect(screen.queryByRole("heading", { name: "Your feedback" })).toBeNull();
+    expect(fetchMock).toHaveBeenCalledTimes(3);
+    fetchMock.mockResolvedValueOnce(
+      reply({ question: { ...question, focus: "Next topic" }, feedback })
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Get feedback" }));
+    await screen.findByRole("heading", { name: "Your feedback" });
+    fireEvent.click(screen.getByRole("button", { name: "Next question →" }));
+    expect(
+      screen.queryByText("A strong example tailored to the role.")
+    ).toBeNull();
+    expect(
+      (
+        screen.getByRole("button", {
+          name: "Hint",
+        }) as HTMLButtonElement
+      ).disabled
+    ).toBe(false);
+  });
+
+  it("allows No idea with an empty draft and retries failed help requests", async () => {
+    fetchMock.mockResolvedValueOnce(reply({ question, feedback: null }));
+    open();
+    fireEvent.click(screen.getByRole("button", { name: "Start practice" }));
+    await screen.findByLabelText("Your answer");
+    fetchMock.mockResolvedValueOnce(reply({ error: "Help unavailable" }, 502));
+    fireEvent.click(screen.getByRole("button", { name: "No idea" }));
+    await screen.findByText("Help unavailable");
+    fetchMock.mockResolvedValueOnce(
+      reply({ text: "Example answer without grading." })
+    );
+    fireEvent.click(screen.getByRole("button", { name: "No idea" }));
+    await screen.findByText("Example answer without grading.");
+    expect(
+      (screen.getByLabelText("Your answer") as HTMLTextAreaElement).value
+    ).toBe("");
+    expect(screen.queryByRole("heading", { name: "Your feedback" })).toBeNull();
+  });
   it("shows the assistant link only for in-progress jobs", () => {
     localStorage.setItem(
       "savedAnalyses",

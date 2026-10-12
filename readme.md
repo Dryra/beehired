@@ -149,6 +149,12 @@ TypeScript, Python, Java, SQL, and C++, plus plain text for other languages.
 Code is reviewed by the model and is not executed. Feedback includes a score,
 strengths, improvements, and an example answer.
 
+Use **Hint** for one short AI nudge (up to 350 characters) without revealing the
+solution. **No idea** shows a strong example answer directly, including a solution
+for coding questions, without grading or submitting your draft. Both use the
+current question, interview settings, job description and CV. Your draft stays
+editable, and you can still practice your own response and choose **Get feedback**.
+
 For spoken answers, click **Speak** inside the interview text-answer box, allow
 microphone access, and click **Stop & transcribe** when finished. Whisper (`whisper-1`)
 transcribes the recording; the transcript is appended to any typed draft and

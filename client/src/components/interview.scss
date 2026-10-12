@@ -214,6 +214,28 @@
     flex-wrap: wrap;
     gap: 12px;
   }
+  .interviewHelp {
+    margin-bottom: 24px;
+  }
+  .interviewHelpActions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .interviewHint,
+  .interviewModelAnswer {
+    margin-top: 16px;
+    padding: 18px;
+    border-radius: 12px;
+    background: #fff8dd;
+    border: 1px solid #eadba2;
+    p {
+      margin-bottom: 0;
+    }
+    pre {
+      margin: 0 0 12px;
+    }
+  }
   .speechTextInput {
     border: 1px solid #cfd2d6;
     border-radius: 12px;

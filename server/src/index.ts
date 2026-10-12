@@ -8,6 +8,11 @@ import { zodTextFormat } from "openai/helpers/zod";
 import { createInterviewRouter } from "./routes/interviewRoutes";
 import { interviewInstructions, interviewOutputSchema } from "./interview";
 import { createTranscriptionRouter } from "./routes/transcriptionRoutes";
+import { createInterviewHelpRouter } from "./routes/interviewHelpRoutes";
+import {
+  interviewHelpInstructions,
+  interviewHelpOutputSchema,
+} from "./interviewHelp";
 
 dotenv.config();
 
@@ -69,6 +74,32 @@ app.use(
             format: zodTextFormat(interviewOutputSchema, "interview_turn"),
           },
           max_output_tokens: 6000,
+          store: false,
+        },
+        { timeout: 90000, maxRetries: 0 }
+      );
+      return response.output_parsed;
+    },
+  })
+);
+
+app.use(
+  "/api",
+  createInterviewHelpRouter({
+    canUseAI: (token) => DEMO_MODE !== "true" && isValidDemoToken(token),
+    generate: async (request) => {
+      const response = await openai.responses.parse(
+        {
+          model: process.env.INTERVIEW_MODEL || "gpt-5.5",
+          instructions: interviewHelpInstructions(request),
+          input: [{ role: "user", content: JSON.stringify(request) }],
+          text: {
+            format: zodTextFormat(
+              interviewHelpOutputSchema(request.mode),
+              "interview_help"
+            ),
+          },
+          max_output_tokens: request.mode === "hint" ? 2000 : 6000,
           store: false,
         },
         { timeout: 90000, maxRetries: 0 }
